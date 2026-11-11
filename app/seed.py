@@ -396,6 +396,82 @@ TIN_HOC_10: list[tuple[str, list[tuple[int, str, list[tuple[str, float]], str]]]
             ),
         ],
     ),
+    (
+        "Thuật toán tìm kiếm và sắp xếp",
+        [
+            (
+                1,
+                "Trình bày ý tưởng của thuật toán tìm kiếm tuần tự (Linear Search) và tìm kiếm nhị phân (Binary Search). "
+                "Điều kiện bắt buộc để áp dụng thuật toán tìm kiếm nhị phân là gì?",
+                [
+                    ("Nêu đúng ý tưởng tìm kiếm tuần tự và tìm kiếm nhị phân", 0.5),
+                    ("Nêu đúng điều kiện bắt buộc: danh sách phải được sắp xếp trước", 0.5),
+                ],
+                "Ý tưởng:\n"
+                "- Tìm kiếm tuần tự: Duyệt lần lượt từng phần tử từ đầu đến cuối danh sách, so sánh với khóa cần tìm cho đến khi thấy hoặc hết danh sách.\n"
+                "- Tìm kiếm nhị phân: Tại mỗi bước, so sánh khóa với phần tử ở giữa danh sách. Nếu nhỏ hơn thì tìm ở nửa đầu, nếu lớn hơn thì tìm ở nửa sau, mỗi lần chia đôi phạm vi tìm kiếm.\n"
+                "Điều kiện bắt buộc: Danh sách dữ liệu phải được sắp xếp theo thứ tự (tăng dần hoặc giảm dần).",
+            ),
+            (
+                2,
+                "Cho dãy số đã sắp xếp: A = [5, 11, 18, 24, 32, 45, 60] và cần tìm khóa k = 45.\n"
+                "Hãy mô phỏng từng bước của thuật toán tìm kiếm nhị phân: chỉ rõ chỉ số trái (left), phải (right), giữa (mid) và giá trị so sánh ở mỗi lần lặp.",
+                [
+                    ("Bước 1: xác định đúng left=0, right=6, mid=3 (A[3]=24 < 45) -> chuyển sang nửa sau", 1.0),
+                    ("Bước 2: xác định đúng left=4, right=6, mid=5 (A[5]=45 == 45) -> tìm thấy tại vị trí 5", 1.0),
+                ],
+                "Mô phỏng:\n"
+                "- Bước 1: left = 0, right = 6 -> mid = (0 + 6) // 2 = 3. Giá trị A[3] = 24. Vì 24 < 45 nên chuyển sang nửa sau: left = mid + 1 = 4.\n"
+                "- Bước 2: left = 4, right = 6 -> mid = (4 + 6) // 2 = 5. Giá trị A[5] = 45. Vì 45 == 45 nên tìm thấy khóa k tại chỉ số 5 (vị trí thứ 6). Dừng thuật toán.",
+            ),
+            (
+                3,
+                "Viết hàm Python tim_kiem_nhi_phan(a, x) nhận vào danh sách số nguyên a đã sắp xếp tăng dần và giá trị x cần tìm.\n"
+                "Hàm trả về chỉ số đầu tiên của x trong danh sách, nếu không tìm thấy trả về -1.",
+                [
+                    ("Khởi tạo đúng left, right và vòng lặp while left <= right", 1.0),
+                    ("Tính đúng mid, so sánh và cập nhật left, right chính xác", 1.5),
+                    ("Trả về mid khi tìm thấy và -1 khi kết thúc vòng lặp", 0.5),
+                ],
+                "def tim_kiem_nhi_phan(a, x):\n"
+                "    left, right = 0, len(a) - 1\n"
+                "    while left <= right:\n"
+                "        mid = (left + right) // 2\n"
+                "        if a[mid] == x:\n"
+                "            return mid\n"
+                "        elif a[mid] < x:\n"
+                "            left = mid + 1\n"
+                "        else:\n"
+                "            right = mid - 1\n"
+                "    return -1",
+            ),
+            (
+                4,
+                "Viết chương trình Python thực hiện thuật toán Sắp xếp chọn (Selection Sort) hoặc Sắp xếp nổi bọt (Bubble Sort) "
+                "để sắp xếp một dãy số nguyên nhập từ bàn phím theo thứ tự tăng dần.\n"
+                "Giải thích cơ chế đổi chỗ và nêu độ phức tạp thời gian của thuật toán trong trường hợp xấu nhất.",
+                [
+                    ("Viết đúng thuật toán sắp xếp (hai vòng lặp lồng nhau, so sánh và đổi chỗ đúng)", 2.0),
+                    ("Nhập xuất dữ liệu chuẩn trong Python", 1.0),
+                    ("Giải thích đúng cơ chế đổi chỗ và độ phức tạp O(n^2)", 1.0),
+                ],
+                "def sap_xep_chon(a):\n"
+                "    n = len(a)\n"
+                "    for i in range(n - 1):\n"
+                "        min_idx = i\n"
+                "        for j in range(i + 1, n):\n"
+                "            if a[j] < a[min_idx]:\n"
+                "                min_idx = j\n"
+                "        a[i], a[min_idx] = a[min_idx], a[i]\n"
+                "    return a\n\n"
+                "a = list(map(int, input().split()))\n"
+                "print(*sap_xep_chon(a))\n\n"
+                "# Giải thích:\n"
+                "# - Cơ chế: Ở mỗi bước i, thuật toán tìm phần tử nhỏ nhất từ chỉ số i đến cuối dãy rồi đổi chỗ với a[i].\n"
+                "# - Độ phức tạp: O(n^2) trong trường hợp xấu nhất do có 2 vòng lặp lồng nhau duyệt n*(n-1)/2 lần.",
+            ),
+        ],
+    ),
 ]
 
 TIN_HOC_11: list[tuple[str, list[tuple[int, str, list[tuple[str, float]], str]]]] = [
@@ -842,11 +918,11 @@ STUDENTS: list[tuple[str, float, str]] = [
 def create_sample_subject(db: Session, teacher: Teacher, grade: int = 10) -> Subject:
     if grade == 11:
         name = "Tin học 11"
-        desc = "Chủ đề Hệ cơ sở dữ liệu & SQL và Hệ thống máy tính (GDPT 2018). Dữ liệu mẫu."
+        desc = "Định hướng CSDL & SQL và Hệ thống máy tính (GDPT 2018). Dữ liệu mẫu."
         data = TIN_HOC_11
     else:
-        name = "Tin học 10"
-        desc = "Chủ đề F – Giải quyết vấn đề với sự trợ giúp của máy tính (lập trình Python). Dữ liệu mẫu."
+        name = "Tin học 10 (Khoa học máy tính)"
+        desc = "Định hướng Khoa học máy tính (CS) – Lập trình Python và Thuật toán (GDPT 2018). Dữ liệu mẫu."
         data = TIN_HOC_10
     subject = Subject(
         teacher_id=teacher.id,
