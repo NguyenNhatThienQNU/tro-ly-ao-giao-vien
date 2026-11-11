@@ -62,6 +62,22 @@
         <p class="small text-muted mt-3 mb-0">Mỗi môn có thể dùng cho nhiều lớp cùng khối. Chủ đề nên bám theo chương/bài trong sách giáo khoa.</p>
       </div>
     </div>
+    <div class="card border-0 shadow-sm mt-3">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-magic"></i> Nạp môn &amp; câu hỏi mẫu (GDPT 2018)</h2></div>
+      <div class="card-body">
+        <p class="small text-muted mb-3">Nạp nhanh chương trình chuẩn kèm ngân hàng câu hỏi có sẵn biểu điểm rubric:</p>
+        <form method="post" action="/onboarding/sample" class="mb-2">
+          {{ csrf() }}
+          <input type="hidden" name="grade" value="10">
+          <button class="btn btn-sm btn-outline-primary w-100 text-start"><i class="bi bi-filetype-py me-1"></i> Nạp Tin học 10 (Lập trình Python)</button>
+        </form>
+        <form method="post" action="/onboarding/sample">
+          {{ csrf() }}
+          <input type="hidden" name="grade" value="11">
+          <button class="btn btn-sm btn-outline-success w-100 text-start"><i class="bi bi-database-check me-1"></i> Nạp Tin học 11 (CSDL &amp; SQL)</button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

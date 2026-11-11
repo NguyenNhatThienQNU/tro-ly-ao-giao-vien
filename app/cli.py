@@ -41,6 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--email", default="demo@truonghoc.vn")
     p.add_argument("--password", default="demo1234")
     p.add_argument("--name", default="Giáo viên Demo")
+    p.add_argument("--grade", type=int, default=10, choices=[10, 11], help="Khối lớp (10 hoặc 11)")
     args = parser.parse_args(argv)
 
     settings = get_settings()
@@ -88,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
             teacher = Teacher(full_name=args.name, email=args.email.lower(), password_hash=hash_password(args.password))
             db.add(teacher)
             db.flush()
-            classroom = seed_sample_data(db, teacher, settings, build_provider(settings))
+            classroom = seed_sample_data(db, teacher, settings, build_provider(settings), grade=args.grade)
             print(f"✔ Đã tạo dữ liệu mẫu (lớp {classroom.name}).")
             print(f"  Đăng nhập: {args.email} / {args.password}")
             return 0

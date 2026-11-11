@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Form, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -84,13 +84,19 @@ def dashboard(
 
 
 @router.post("/onboarding/sample")
-def load_sample(request: Request, db: Session = Depends(get_db), teacher: Teacher = Depends(current_teacher)):
+def load_sample(
+    request: Request,
+    grade: int = Form(10),
+    db: Session = Depends(get_db),
+    teacher: Teacher = Depends(current_teacher),
+):
     from ..seed import seed_sample_data
 
-    classroom = seed_sample_data(db, teacher, request.app.state.settings, request.app.state.ai)
+    classroom = seed_sample_data(db, teacher, request.app.state.settings, request.app.state.ai, grade=grade)
     db.commit()
     flash(
-        request, f"Đã nạp dữ liệu mẫu: môn Tin học 10, ngân hàng câu hỏi và lớp «{classroom.name}» kèm lịch sử 3 tuần."
+        request,
+        f"Đã nạp dữ liệu mẫu: môn {classroom.subject.name}, ngân hàng câu hỏi và lớp «{classroom.name}» kèm lịch sử 3 tuần.",
     )
     return redirect(f"/dashboard?class_id={classroom.id}")
 

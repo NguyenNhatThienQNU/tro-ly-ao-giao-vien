@@ -6,7 +6,11 @@ giao diện và tin nhắn hiển thị theo giờ Việt Nam (cấu hình đư�
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+try:
+    from datetime import UTC, datetime
+except ImportError:  # Python < 3.11
+    from datetime import datetime, timezone
+    UTC = timezone.utc
 from functools import lru_cache
 from zoneinfo import ZoneInfo
 

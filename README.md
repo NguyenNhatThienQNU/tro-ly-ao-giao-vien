@@ -41,7 +41,7 @@ Chi tiết thiết kế (CSDL, công thức, thuật toán, luồng xử lý) n�
 
 1. Cài Python 3.11 trở lên tại [python.org](https://www.python.org/downloads/). Khi cài, nhớ tích ô "Add python.exe to PATH".
 2. Nhấp đúp tệp `run.bat` trong thư mục dự án. Lần đầu, script sẽ tạo môi trường ảo, cài thư viện, tạo tệp `.env` rồi khởi động máy chủ.
-3. Mở trình duyệt vào http://localhost:8000. Tạo tài khoản giáo viên đầu tiên, rồi bấm "Nạp dữ liệu mẫu Tin học 10" để dùng thử ngay.
+3. Mở trình duyệt vào http://localhost:8000. Tạo tài khoản giáo viên đầu tiên, rồi bấm "Nạp dữ liệu mẫu Tin học 10 (Python)" hoặc "Nạp dữ liệu mẫu Tin học 11 (CSDL & SQL)" để dùng thử ngay.
 
 Chạy thủ công (Windows, macOS, Linux):
 

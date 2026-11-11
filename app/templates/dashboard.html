@@ -18,12 +18,18 @@
         <div class="d-flex flex-wrap gap-2">
           <form method="post" action="/onboarding/sample">
             {{ csrf() }}
-            <button class="btn btn-primary"><i class="bi bi-magic"></i> Nạp dữ liệu mẫu Tin học 10 để dùng thử</button>
+            <input type="hidden" name="grade" value="10">
+            <button class="btn btn-outline-primary"><i class="bi bi-filetype-py"></i> Nạp dữ liệu mẫu Tin học 10 (Python)</button>
+          </form>
+          <form method="post" action="/onboarding/sample">
+            {{ csrf() }}
+            <input type="hidden" name="grade" value="11">
+            <button class="btn btn-primary"><i class="bi bi-database-check"></i> Nạp dữ liệu mẫu Tin học 11 (CSDL &amp; SQL)</button>
           </form>
           <a href="/subjects" class="btn btn-outline-primary"><i class="bi bi-diagram-3"></i> Tự tạo môn học</a>
           <a href="/classes" class="btn btn-outline-secondary"><i class="bi bi-people"></i> Tạo lớp</a>
         </div>
-        <p class="small text-muted mt-3 mb-0">Dữ liệu mẫu gồm 6 chủ đề lập trình Python, 25 câu hỏi có rubric và một lớp 10 học sinh với lịch sử 3 tuần học. Có thể xóa bất cứ lúc nào.</p>
+        <p class="small text-muted mt-3 mb-0">Dữ liệu mẫu gồm các chủ đề chuẩn GDPT 2018 (Tin 10: lập trình Python; Tin 11: Hệ CSDL &amp; SQL), câu hỏi có rubric chuẩn và một lớp 10 học sinh kèm lịch sử học tập 3 tuần.</p>
       </div>
     </div>
   </div>
@@ -43,6 +49,25 @@
     </ul>
   </div>
   {% endif %}
+  <div class="dropdown">
+    <button class="btn btn-light border dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-magic"></i> Nạp thêm dữ liệu mẫu</button>
+    <ul class="dropdown-menu dropdown-menu-end p-2" style="min-width: 250px;">
+      <li>
+        <form method="post" action="/onboarding/sample" class="mb-1">
+          {{ csrf() }}
+          <input type="hidden" name="grade" value="10">
+          <button class="btn btn-sm btn-outline-primary w-100 text-start"><i class="bi bi-filetype-py me-1"></i> Nạp mẫu Tin học 10</button>
+        </form>
+      </li>
+      <li>
+        <form method="post" action="/onboarding/sample">
+          {{ csrf() }}
+          <input type="hidden" name="grade" value="11">
+          <button class="btn btn-sm btn-outline-success w-100 text-start"><i class="bi bi-database-check me-1"></i> Nạp mẫu Tin học 11 (CSDL &amp; SQL)</button>
+        </form>
+      </li>
+    </ul>
+  </div>
   <a href="/assignments/new?class_id={{ classroom.id }}" class="btn btn-primary"><i class="bi bi-send-plus"></i> Giao bài cá nhân hóa</a>
   <a href="/assistant" class="btn btn-outline-primary"><i class="bi bi-stars"></i> Hỏi trợ lý</a>
 </div>
