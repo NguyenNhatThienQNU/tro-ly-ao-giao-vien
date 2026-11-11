@@ -27,9 +27,16 @@ LEVEL_GUIDE = {
     4: "Vận dụng cao – giải quyết tình huống mới, phối hợp nhiều kiến thức, cần lập luận hoặc tối ưu.",
 }
 
-QUESTION_SYSTEM = """Bạn là giáo viên môn {subject} giàu kinh nghiệm, soạn câu hỏi tự luận theo chương trình GDPT 2018.
-Câu hỏi phải chính xác về chuyên môn, rõ ràng, có một lời giải kiểm chứng được, phù hợp học sinh THPT Việt Nam.
-Chỉ trả về JSON đúng lược đồ đã cho."""
+QUESTION_SYSTEM = """Bạn là giáo viên chuyên môn {subject} giàu kinh nghiệm tại trường THPT Việt Nam, soạn câu hỏi và bài tập theo chương trình GDPT 2018 (sách Kết nối tri thức / Cánh diều).
+
+Nguyên tắc bắt buộc:
+1. Chuẩn hóa công nghệ theo chương trình mới:
+   - Với môn Tin học 10 (Khoa học máy tính): Ngôn ngữ lập trình bắt buộc là Python 3 (tuyệt đối không dùng Pascal hay C++). Yêu cầu học sinh viết mã, tìm lỗi sai, truy vết hoặc dự đoán kết quả thực thi.
+   - Với môn Tin học 11: Ngôn ngữ truy vấn cơ sở dữ liệu bắt buộc là chuẩn SQL (SELECT, JOIN, INSERT, UPDATE, DELETE).
+2. Câu hỏi phải hoàn toàn chính xác về mặt kỹ thuật, rõ ràng, không mơ hồ, lời giải kiểm chứng được.
+3. Đáp án tham khảo (reference_answer): Phải có lời giải chi tiết, kèm đoạn mã nguồn Python hoặc câu lệnh SQL mẫu hoàn chỉnh chạy được.
+4. Rubric: Phải chia thành 2-4 tiêu chí cụ thể với số điểm tương ứng, tổng điểm các tiêu chí phải đúng bằng điểm tối đa của câu hỏi.
+5. Chỉ trả về JSON đúng cấu trúc lược đồ."""
 
 ASSISTANT_SYSTEM = """Bạn là "Trợ lý ảo Giáo viên" – trợ lý của giáo viên {teacher} trong việc quản lý lớp, giao bài cá nhân hóa, theo dõi tiến độ và tư vấn chuyên môn.
 Thời điểm hiện tại: {now} (giờ Việt Nam, UTC+07:00).
@@ -78,19 +85,20 @@ def question_system(subject: str) -> str:
 
 def question_prompt(req: QuestionGenRequest) -> str:
     lines = [
-        f"Soạn {req.count} câu hỏi tự luận cho chủ đề «{req.topic_name}» (môn {req.subject_name}).",
-        f"Mức độ: {LEVEL_GUIDE.get(req.level, req.level_name)}",
-        f"Mỗi câu tối đa {fmt_score(req.max_score)} điểm.",
-        "Yêu cầu:",
-        "- Học sinh làm trên giấy rồi chụp ảnh nộp, không dùng máy tính. Với lập trình: yêu cầu viết đoạn chương trình ra giấy, "
-        "giải thích hoặc dự đoán kết quả.",
-        f"- Rubric 2–4 tiêu chí, tổng điểm đúng bằng {fmt_score(req.max_score)}.",
-        "- Đáp án tham khảo ngắn gọn, đủ để chấm.",
-        "- Các câu khác nhau về ý, không trùng nhau.",
+        f"Soạn {req.count} câu hỏi tự luận / bài tập thực hành chất lượng cao cho chủ đề «{req.topic_name}» (môn {req.subject_name}).",
+        f"Mức độ nhận thức: {LEVEL_GUIDE.get(req.level, req.level_name)}.",
+        f"Điểm tối đa mỗi câu: {fmt_score(req.max_score)} điểm.",
+        "Yêu cầu sư phạm:",
+        "- Học sinh làm bài tự luận trên giấy rồi chụp ảnh nộp qua hệ thống.",
+        "- Với các câu lập trình Python (Tin 10): Cho bài toán cụ thể, yêu cầu học sinh viết hàm/chương trình ra giấy, giải thích thuật toán hoặc dự đoán kết quả chạy.",
+        "- Với các câu SQL (Tin 11): Nêu rõ cấu trúc các bảng liên quan (tên bảng, các trường) trước khi yêu cầu viết câu lệnh truy vấn.",
+        f"- Rubric chấm điểm: Gồm 2–4 tiêu chí rõ ràng, tổng điểm đúng bằng {fmt_score(req.max_score)} điểm.",
+        "- Đáp án tham khảo: Cung cấp đầy đủ code Python mẫu hoặc câu lệnh SQL chuẩn, giải thích ngắn gọn.",
+        "- Các câu hỏi phải phong phú, khác nhau về tình huống và góc độ khai thác, không được trùng lặp.",
     ]
     if req.instruction:
-        lines.append(f"- Yêu cầu thêm của giáo viên: {req.instruction}")
+        lines.append(f"- Yêu cầu bổ sung của giáo viên: {req.instruction}")
     if req.avoid:
-        lines.append("Không trùng ý với các câu đã có sau:")
+        lines.append("Tránh trùng lặp ý tưởng với các câu đã có sau:")
         lines += [f"* {text.strip()[:200]}" for text in req.avoid[:15]]
     return "\n".join(lines)
