@@ -1,5 +1,7 @@
 # Trợ lý ảo hỗ trợ giáo viên
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/NguyenNhatThienQNU/tro-ly-ao-giao-vien)
+
 Quản lý lớp học, cá nhân hóa bài tập và chấm bài qua ảnh bằng AI.
 
 Giáo viên quản lý lớp trên web. Học sinh nhận đề và nộp ảnh bài làm qua chatbot (Telegram, Zalo). AI đề xuất bộ đề riêng theo điểm yếu của từng em và chấm sơ bộ bài viết tay theo rubric. Giáo viên là người duyệt và quyết định cuối cùng.

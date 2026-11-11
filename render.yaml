@@ -2,6 +2,7 @@ services:
   - type: web
     name: tro-ly-ao-giao-vien
     runtime: python
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:create_app --factory --host 0.0.0.0 --port $PORT --proxy-headers
     envVars:
