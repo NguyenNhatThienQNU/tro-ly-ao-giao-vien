@@ -29,6 +29,11 @@ def login_page(request: Request, next: str = "/dashboard", db: Session = Depends
     if request.session.get("teacher_id"):
         return redirect(safe_next(next))
     if (db.scalar(select(func.count(Teacher.id))) or 0) == 0:
+        flash(
+            request,
+            "Hệ thống chưa có tài khoản nào được lưu (hoặc máy chủ vừa khởi tạo lại). Vui lòng thiết lập tài khoản giáo viên quản trị.",
+            "info",
+        )
         return redirect("/register")
     return render(request, "login.html", next=safe_next(next), registration_open=_registration_open(request, db))
 

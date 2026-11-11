@@ -16,6 +16,11 @@
         {% if errors %}
         <div class="alert alert-danger py-2"><ul class="mb-0 ps-3">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
         {% endif %}
+        {% if first %}
+        <div class="alert alert-info py-2 small mb-3">
+          <i class="bi bi-info-circle me-1"></i> Máy chủ vừa cập nhật bản mới nên cơ sở dữ liệu được làm mới. Vui lòng thiết lập nhanh tài khoản giáo viên của bạn để tiếp tục.
+        </div>
+        {% endif %}
         <form method="post" action="/register">
           {{ csrf() }}
           <div class="mb-3">
@@ -40,7 +45,7 @@
         </form>
       </div>
     </div>
-    {% if not first %}<p class="text-center mt-3 small">Đã có tài khoản? <a href="/login">Đăng nhập</a></p>{% endif %}
+    <p class="text-center mt-3 small">Đã có tài khoản? <a href="/login" class="fw-semibold">Đăng nhập</a></p>
   </div>
 </div>
 {% endblock %}
