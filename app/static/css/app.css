@@ -1,0 +1,172 @@
+/* Giao diện Trợ lý ảo Giáo viên – bổ sung cho Bootstrap 5.3 */
+:root {
+  --app-primary: #3b5bdb;
+  --app-primary-dark: #364fc7;
+  --app-ink: #1c2541;
+  --app-bg: #f5f7fb;
+  --bs-body-font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --bs-primary: #3b5bdb;
+  --bs-primary-rgb: 59, 91, 219;
+  --bs-link-color: #3b5bdb;
+  --bs-link-color-rgb: 59, 91, 219;
+  --bs-link-hover-color: #364fc7;
+  --bs-link-hover-color-rgb: 54, 79, 199;
+}
+body { background: var(--app-bg); font-size: .95rem; color: #2b2f38; }
+
+.btn-primary {
+  --bs-btn-bg: var(--app-primary); --bs-btn-border-color: var(--app-primary);
+  --bs-btn-hover-bg: var(--app-primary-dark); --bs-btn-hover-border-color: var(--app-primary-dark);
+  --bs-btn-active-bg: #2f44ad; --bs-btn-active-border-color: #2f44ad;
+  --bs-btn-disabled-bg: var(--app-primary); --bs-btn-disabled-border-color: var(--app-primary);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--app-primary); --bs-btn-border-color: var(--app-primary);
+  --bs-btn-hover-bg: var(--app-primary); --bs-btn-hover-border-color: var(--app-primary);
+  --bs-btn-active-bg: var(--app-primary); --bs-btn-active-border-color: var(--app-primary);
+}
+.nav-pills { --bs-nav-pills-link-active-bg: var(--app-primary); }
+.nav-pills .nav-link { color: #495057; }
+.nav-pills .nav-link.active { color: #fff; }
+.text-primary { color: var(--app-primary) !important; }
+.bg-primary-subtle { background-color: #edf2ff !important; }
+.text-bg-purple { background: #f3f0ff; color: #6741d9; border: 1px solid #d0bfff; }
+.form-check-input:checked { background-color: var(--app-primary); border-color: var(--app-primary); }
+
+/* Thanh điều hướng */
+.app-nav { background: #fff; border-bottom: 1px solid #e9ecef; box-shadow: 0 1px 2px rgba(16, 24, 40, .04); }
+.app-nav .nav-link { color: #495057; font-weight: 500; border-radius: .5rem; padding: .45rem .8rem !important; }
+.app-nav .nav-link.active, .app-nav .nav-link:hover { color: var(--app-primary); background: #edf2ff; }
+.navbar-brand { display: flex; align-items: center; gap: .55rem; font-weight: 700; color: var(--app-ink); }
+.brand-mark {
+  display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
+  border-radius: 10px; background: linear-gradient(135deg, #3b5bdb, #7048e8); color: #fff; font-size: 1.05rem;
+}
+.brand-mark-lg { width: 56px; height: 56px; font-size: 1.6rem; border-radius: 16px; }
+
+.card { border-radius: .9rem; }
+.card-header { border-bottom: 1px solid #f1f3f5; padding: .85rem 1.1rem; }
+.card > .card-header:first-child { border-top-left-radius: .9rem; border-top-right-radius: .9rem; }
+.card > .card-footer:last-child { border-bottom-left-radius: .9rem; border-bottom-right-radius: .9rem; }
+.page-head h1 { font-weight: 700; color: var(--app-ink); }
+
+/* Thẻ số liệu */
+.kpi-card {
+  display: flex; gap: .9rem; align-items: center; background: #fff; border-radius: .9rem; padding: 1rem 1.1rem;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .06); height: 100%; color: inherit;
+}
+.kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+.kpi-value { font-size: 1.45rem; font-weight: 700; line-height: 1.1; color: var(--app-ink); }
+.kpi-label { font-size: .78rem; color: #6c757d; }
+
+/* Bản đồ nhiệt mức nắm vững */
+.heatmap th, .heatmap td { white-space: nowrap; vertical-align: middle; }
+.heatmap thead th { font-size: .75rem; font-weight: 600; color: #495057; background: #f8f9fa; position: sticky; top: 0; z-index: 2; }
+.heatmap .sticky-col { position: sticky; left: 0; background: #fff; z-index: 1; min-width: 190px; }
+.heatmap thead .sticky-col, .heatmap tfoot .sticky-col { z-index: 3; background: #f8f9fa; }
+.heatmap td.heat { text-align: center; font-weight: 600; font-size: .82rem; min-width: 64px; border: 2px solid #fff; border-radius: 6px; }
+.heatmap-wrap { max-height: 70vh; }
+.m-none { background: #f1f3f5 !important; color: #adb5bd !important; }
+.m-low { background: #ffe3e3 !important; color: #c92a2a !important; }
+.m-mid { background: #fff3bf !important; color: #a65300 !important; }
+.m-good { background: #d3f9d8 !important; color: #2b8a3e !important; }
+.m-high { background: #8ce99a !important; color: #1b5e20 !important; }
+.m-badge { font-weight: 600; min-width: 46px; }
+.legend { display: flex; gap: .6rem; flex-wrap: wrap; color: #6c757d; }
+.legend-item { display: inline-flex; align-items: center; gap: .25rem; }
+.swatch { display: inline-block; width: 14px; height: 14px; border-radius: 4px; }
+
+/* Câu hỏi, bộ đề, chấm bài */
+.level-badge { font-weight: 500; }
+.q-content { white-space: pre-wrap; font-size: .93rem; line-height: 1.55; }
+.ref-answer {
+  white-space: pre-wrap; background: #f8f9fa; border-left: 3px solid #51cf66; padding: .5rem .75rem;
+  border-radius: 0 .4rem .4rem 0; font-size: .85rem;
+}
+.font-mono, .transcription { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+.transcription {
+  white-space: pre-wrap; background: #fffbea; border: 1px dashed #ffd43b; padding: .6rem .8rem;
+  border-radius: .5rem; font-size: .85rem; max-height: 260px; overflow: auto;
+}
+.errors-box { background: #fff5f5; border-radius: .5rem; padding: .6rem .8rem; }
+.question-card.is-draft { border-left: 4px solid #fab005 !important; }
+.assignment-card { border-top: 3px solid transparent !important; }
+.assignment-card.status-draft { border-top-color: #fab005 !important; }
+.assignment-card.status-assigned { border-top-color: var(--app-primary) !important; }
+.assignment-card.status-submitted { border-top-color: #15aabf !important; }
+.assignment-card.status-graded { border-top-color: #40c057 !important; }
+.assignment-card.status-cancelled { opacity: .55; }
+.rationale { background: #f8f9ff; border-radius: .5rem; padding: .5rem .7rem; color: #495057; }
+.question-list { padding-left: 1.2rem; }
+.question-list li { margin-bottom: .6rem; }
+details > summary { cursor: pointer; }
+.stat-pill { background: #f8f9fa; border-radius: .6rem; padding: .45rem .7rem; text-align: center; color: #6c757d; }
+.stat-pill b { font-size: 1.1rem; display: block; color: var(--app-ink); }
+.total-box { font-size: 1.05rem; }
+.submission-images { max-height: calc(100vh - 160px); overflow-y: auto; }
+
+/* Lớp, học sinh */
+.class-card { transition: transform .12s, box-shadow .12s; }
+.class-card:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(16, 24, 40, .08) !important; }
+.class-avatar {
+  width: 44px; height: 44px; border-radius: 12px; background: #edf2ff; color: var(--app-primary); font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.avatar-lg { width: 56px; height: 56px; font-size: 1.4rem; }
+.link-code { background: #f1f3f5; color: #343a40; padding: .15rem .4rem; border-radius: .3rem; letter-spacing: .05em; }
+.student-pick {
+  display: flex; align-items: center; gap: .5rem; border: 1px solid #e9ecef; border-radius: .6rem;
+  padding: .45rem .6rem; cursor: pointer; font-size: .88rem; margin: 0; background: #fff;
+}
+.student-pick:hover { background: #f8f9fa; }
+.mode-picker .btn { border-width: 2px; }
+.mode-desc { color: #6c757d; }
+.mode-picker .btn-check:checked + .btn .mode-desc { color: rgba(255, 255, 255, .85); }
+
+/* Khởi đầu */
+.step-card { background: #f8f9fb; border-radius: .8rem; padding: 1rem; height: 100%; }
+.step-num {
+  display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: var(--app-primary); color: #fff;
+  align-items: center; justify-content: center; font-weight: 700; margin-bottom: .5rem;
+}
+.onboarding { background: linear-gradient(180deg, #fff, #f8f9ff); }
+
+/* Trợ lý AI */
+.chat-card { height: calc(100vh - 140px); min-height: 520px; display: flex; flex-direction: column; }
+.chat-body { flex: 1; overflow-y: auto; background: #fafbfe; }
+.msg { display: flex; flex-direction: column; margin-bottom: .9rem; max-width: 88%; }
+.msg-user { margin-left: auto; align-items: flex-end; }
+.msg .bubble { padding: .65rem .9rem; border-radius: 1rem; white-space: pre-wrap; line-height: 1.5; }
+.msg-assistant .bubble { background: #fff; border: 1px solid #e9ecef; border-top-left-radius: .3rem; }
+.msg-user .bubble { background: var(--app-primary); color: #fff; border-top-right-radius: .3rem; }
+.msg-assistant .bubble.md { white-space: normal; }
+.msg-assistant .bubble.md p { margin-bottom: .4rem; }
+.msg-assistant .bubble.md p:last-child { margin-bottom: 0; }
+.msg-assistant .bubble.md ul { margin-bottom: .4rem; padding-left: 1.2rem; }
+.msg .actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .4rem; }
+.typing span { display: inline-block; width: 7px; height: 7px; margin: 0 2px; background: #adb5bd; border-radius: 50%; animation: blink 1.2s infinite both; }
+.typing span:nth-child(2) { animation-delay: .2s; }
+.typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .2; } 40% { opacity: 1; } }
+.suggestion { font-size: .82rem; }
+
+/* Phiếu QR */
+.qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.qr-card { background: #fff; border: 1px dashed #adb5bd; border-radius: .6rem; padding: .8rem; break-inside: avoid; }
+.qr-head { border-bottom: 1px solid #f1f3f5; padding-bottom: .4rem; margin-bottom: .5rem; }
+.qr-body { display: flex; gap: .8rem; align-items: center; }
+.qr-img svg { display: block; }
+.qr-code-text { font-family: ui-monospace, Consolas, monospace; font-size: 1.4rem; font-weight: 700; letter-spacing: .12em; color: var(--app-ink); }
+.qr-inline svg { margin: 0 auto; display: block; }
+@media print {
+  .app-nav, .no-print, .alert { display: none !important; }
+  body { background: #fff; }
+  main { padding: 0 !important; }
+  .qr-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.auth-page { background: radial-gradient(circle at top, #edf2ff 0, #f5f7fb 45%); min-height: 100vh; }
+.public-question { padding: .9rem 0; border-bottom: 1px solid #f1f3f5; }
+.clickable-row { cursor: pointer; }
+.alert-list .list-group-item { border-color: #f1f3f5; }
+.heatmap thead th.topic-head { white-space: normal; min-width: 86px; max-width: 120px; line-height: 1.25; vertical-align: bottom; }

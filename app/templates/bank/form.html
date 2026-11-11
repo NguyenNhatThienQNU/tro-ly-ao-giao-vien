@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}{{ "Thêm câu hỏi" if is_new else "Sửa câu hỏi" }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="/bank?subject_id={{ subject.id }}">Ngân hàng câu hỏi</a></li>
+  <li class="breadcrumb-item active">{{ "Thêm câu hỏi" if is_new else "Câu hỏi #%d" % question.id }}</li>
+</ol></nav>
+<div class="row justify-content-center">
+  <div class="col-xl-9">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex align-items-center">
+        <h1 class="h5 mb-0 me-auto">{{ "Thêm câu hỏi – " ~ subject.name if is_new else "Sửa câu hỏi #" ~ question.id }}</h1>
+        {% if not is_new and question.status == 'draft' %}<span class="badge text-bg-warning">Nháp do AI soạn – chờ duyệt</span>{% endif %}
+      </div>
+      <div class="card-body">
+        {% if not is_new and usage %}<div class="alert alert-info small py-2"><i class="bi bi-info-circle"></i> Câu hỏi đã dùng trong {{ usage }} bộ đề; sửa nội dung sẽ áp dụng cho cả các bộ đề đó.</div>{% endif %}
+        <form method="post" action="{{ '/bank/new' if is_new else '/bank/%d/edit' % question.id }}" id="questionForm">
+          {{ csrf() }}
+          {% if is_new %}<input type="hidden" name="subject_id" value="{{ subject.id }}">{% endif %}
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Chủ đề</label>
+              <select name="topic_id" class="form-select">{% for t in subject.topics %}<option value="{{ t.id }}" {% if t.id == question.topic_id %}selected{% endif %}>{{ t.name }}</option>{% endfor %}</select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Mức độ</label>
+              <select name="level" class="form-select">{% for lv, name in LEVELS.items() %}<option value="{{ lv }}" {% if lv == question.level %}selected{% endif %}>{{ name }}</option>{% endfor %}</select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Điểm tối đa</label>
+              <input name="max_score" id="maxScore" type="number" step="0.25" min="0.25" class="form-control" value="{{ question.max_score }}">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nội dung câu hỏi</label>
+            <textarea name="content" rows="7" class="form-control font-mono" required placeholder="Đề bài… (giữ nguyên thụt lề khi có đoạn chương trình)">{{ question.content or '' }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label d-flex align-items-center">Rubric chấm <span class="ms-auto small text-muted">Tổng: <b id="rubricSum">0</b> / <span id="rubricMax">{{ question.max_score }}</span> điểm</span></label>
+            <div id="rubricRows">
+              {% for r in (question.rubric or [{"criterion": "", "points": question.max_score}]) %}
+              <div class="input-group mb-2 rubric-row">
+                <input name="rubric_criterion" class="form-control" value="{{ r.criterion }}" placeholder="Tiêu chí, VD: Viết đúng điều kiện của câu lệnh if">
+                <input name="rubric_points" type="number" step="0.25" min="0" class="form-control rubric-points" style="max-width: 110px" value="{{ r.points }}">
+                <button type="button" class="btn btn-outline-secondary rubric-remove" title="Xóa"><i class="bi bi-x"></i></button>
+              </div>
+              {% endfor %}
+            </div>
+            <button type="button" class="btn btn-sm btn-light border" id="rubricAdd"><i class="bi bi-plus"></i> Thêm tiêu chí</button>
+            <div class="form-text">Nếu tổng điểm tiêu chí khác điểm tối đa, hệ thống tự co giãn theo tỉ lệ khi lưu.</div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Đáp án / lời giải tham khảo</label>
+            <textarea name="reference_answer" rows="5" class="form-control font-mono" placeholder="AI dùng để đối chiếu khi chấm; cách giải khác nhưng đúng vẫn được điểm tối đa.">{{ question.reference_answer or '' }}</textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary"><i class="bi bi-save"></i> Lưu</button>
+            {% if not is_new and question.status == 'draft' %}<button class="btn btn-success" name="approve" value="1"><i class="bi bi-check2-circle"></i> Lưu &amp; duyệt vào ngân hàng</button>{% endif %}
+            <a href="/bank?subject_id={{ subject.id }}" class="btn btn-light border ms-auto">Hủy</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

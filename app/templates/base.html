@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %} · {{ app_name }}</title>
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="/static/vendor/be-vietnam-pro/be-vietnam-pro.css" rel="stylesheet">
+  <link href="/static/css/app.css" rel="stylesheet">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+{% if teacher %}
+<nav class="navbar navbar-expand-lg app-nav sticky-top">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand" href="/dashboard">
+      <span class="brand-mark"><i class="bi bi-mortarboard-fill"></i></span>
+      <span class="brand-text">{{ app_name }}</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Mở menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto">
+        {% set nav_items = [
+          ("dashboard", "/dashboard", "speedometer2", "Tổng quan"),
+          ("classes", "/classes", "people", "Lớp học"),
+          ("bank", "/bank", "journal-text", "Ngân hàng câu hỏi"),
+          ("assignments", "/assignments", "send", "Giao bài"),
+          ("grading", "/grading", "check2-square", "Chấm bài"),
+          ("assistant", "/assistant", "stars", "Trợ lý AI"),
+        ] %}
+        {% for key, url, icon, label in nav_items %}
+        <li class="nav-item">
+          <a class="nav-link {% if active == key %}active{% endif %}" href="{{ url }}">
+            <i class="bi bi-{{ icon }}"></i> {{ label }}
+            {% if key == "grading" and nav_pending %}<span class="badge rounded-pill text-bg-danger ms-1">{{ nav_pending }}</span>{% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="d-flex align-items-center gap-2">
+        {% if ai_demo %}
+        <a href="/settings" class="badge rounded-pill text-bg-warning text-decoration-none" title="Chưa cấu hình GEMINI_API_KEY – AI đang chạy chế độ demo">
+          <i class="bi bi-cone-striped"></i> AI demo
+        </a>
+        {% endif %}
+        <div class="dropdown">
+          <button class="btn btn-sm btn-light dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle"></i> {{ teacher.full_name }}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="/subjects"><i class="bi bi-diagram-3"></i> Môn học &amp; chủ đề</a></li>
+            <li><a class="dropdown-item {% if active == 'settings' %}active{% endif %}" href="/settings"><i class="bi bi-gear"></i> Cài đặt &amp; kết nối</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form method="post" action="/logout">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="dropdown-item text-danger"><i class="bi bi-box-arrow-right"></i> Đăng xuất</button>
+              </form>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+{% endif %}
+
+<main class="{% block main_class %}container-fluid px-lg-4 py-4{% endblock %}">
+  {% for category, message in flashes %}
+  <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+  </div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+
+<script src="/static/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="/static/js/app.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

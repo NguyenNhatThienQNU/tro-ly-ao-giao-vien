@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Đăng nhập{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block main_class %}container py-5{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-4">
+    <div class="text-center mb-4">
+      <span class="brand-mark brand-mark-lg"><i class="bi bi-mortarboard-fill"></i></span>
+      <h1 class="h4 mt-3 mb-1">{{ app_name }}</h1>
+      <p class="text-muted small">Quản lý lớp · Cá nhân hóa bài tập · Chấm bài qua ảnh bằng AI</p>
+    </div>
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+        {% if error %}<div class="alert alert-danger py-2">{{ error }}</div>{% endif %}
+        <form method="post" action="/login">
+          {{ csrf() }}
+          <input type="hidden" name="next" value="{{ next }}">
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="{{ email or '' }}" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Mật khẩu</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          <button class="btn btn-primary w-100">Đăng nhập</button>
+        </form>
+      </div>
+    </div>
+    {% if registration_open %}
+    <p class="text-center mt-3 small">Chưa có tài khoản? <a href="/register">Đăng ký</a></p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

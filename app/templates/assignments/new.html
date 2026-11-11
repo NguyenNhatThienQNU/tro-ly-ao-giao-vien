@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, mastery_badge with context %}
+{% block title %}Giao bài mới{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small"><li class="breadcrumb-item"><a href="/assignments">Giao bài</a></li><li class="breadcrumb-item active">Giao bài mới</li></ol></nav>
+<form method="post" action="/assignments/new" data-loading="Đang phân tích mức nắm vững và chọn câu hỏi…">
+  {{ csrf() }}
+  <input type="hidden" name="class_id" value="{{ classroom.id }}">
+  <div class="row g-4">
+    <div class="col-xl-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white"><h1 class="h5 mb-0"><i class="bi bi-send-plus"></i> Giao bài cá nhân hóa</h1></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Lớp</label>
+              <select class="form-select" onchange="location.href='/assignments/new?class_id=' + this.value">
+                {% for c in classes %}<option value="{{ c.id }}" {% if c.id == classroom.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Tên bài</label>
+              <input name="title" class="form-control" placeholder="VD: Luyện tập tuần 10 (để trống sẽ tự đặt)">
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Hạn nộp</label>
+              <input name="due_at" type="datetime-local" class="form-control">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Số câu mỗi bộ đề</label>
+              <input name="num_questions" type="number" min="1" max="10" value="4" class="form-control">
+            </div>
+          </div>
+
+          <label class="form-label mt-4">Chế độ</label>
+          <div class="row g-2 mode-picker">
+            {% set modes = [("auto", "bullseye", "Bám sát điểm yếu từng em; độ khó để làm đúng khoảng 70%."),
+                            ("advanced", "rocket-takeoff", "Câu khó hơn (xác suất làm đúng ≈ 45%) cho học sinh khá giỏi."),
+                            ("review", "arrow-repeat", "Câu vừa sức (≈ 85%) để củng cố, lấy lại tự tin.")] %}
+            {% for key, icon, desc in modes %}
+            <div class="col-md-4">
+              <input type="radio" class="btn-check" name="mode" id="mode-{{ key }}" value="{{ key }}" {% if key == mode %}checked{% endif %}>
+              <label class="btn btn-outline-primary w-100 h-100 text-start p-3" for="mode-{{ key }}">
+                <div class="fw-semibold"><i class="bi bi-{{ icon }}"></i> {{ MODE_LABELS[key] }}</div>
+                <div class="small mode-desc">{{ desc }}</div>
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <label class="form-label mt-4">Yêu cầu thêm cho AI khi phải soạn câu mới (không bắt buộc)</label>
+          <textarea name="instruction" rows="2" class="form-control" placeholder="VD: ưu tiên bài gắn với tình huống thực tế"></textarea>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex align-items-center">
+          <h2 class="h6 mb-0 me-auto"><i class="bi bi-people"></i> Học sinh nhận bài</h2>
+          <button type="button" class="btn btn-sm btn-light border" data-check-all="student_ids">Chọn tất cả</button>
+          <button type="button" class="btn btn-sm btn-light border ms-2" data-uncheck-all="student_ids">Bỏ chọn</button>
+        </div>
+        <div class="card-body">
+          <div class="row g-2">
+            {% for s in classroom.students %}
+            {% set states = table.get(s.id, {}) %}
+            {% set known = states.values() | selectattr("has_data") | map(attribute="pct") | list %}
+            <div class="col-md-6 col-xl-4">
+              <label class="student-pick">
+                <input type="checkbox" class="form-check-input" name="student_ids" value="{{ s.id }}" {% if not selected_student or selected_student == s.id %}checked{% endif %}>
+                <span class="flex-grow-1">{{ s.full_name }}</span>
+                {{ mastery_badge((known | sum / known | length) if known else none) }}
+              </label>
+            </div>
+            {% else %}
+            <p class="text-muted">Lớp chưa có học sinh.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-4">
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-funnel"></i> Giới hạn chủ đề (không bắt buộc)</h2></div>
+        <div class="card-body">
+          {% for t in classroom.subject.topics %}
+          <div class="form-check"><input class="form-check-input" type="checkbox" name="topic_ids" value="{{ t.id }}" id="t{{ t.id }}"><label class="form-check-label small" for="t{{ t.id }}">{{ t.name }}</label></div>
+          {% endfor %}
+          <div class="form-text">Không chọn: hệ thống tự chọn các chủ đề yếu nhất của từng em.</div>
+        </div>
+      </div>
+      <div class="card border-0 shadow-sm mb-3 bg-primary-subtle">
+        <div class="card-body small">
+          <h3 class="h6"><i class="bi bi-lightbulb"></i> Hệ thống chọn bài thế nào?</h3>
+          <ol class="ps-3 mb-0">
+            <li>Ước lượng mức nắm vững từng chủ đề của mỗi em (mô hình Elo).</li>
+            <li>Ưu tiên các chủ đề yếu nhất, chia đều số câu.</li>
+            <li>Chọn mức độ (Nhận biết → Vận dụng cao) sao cho xác suất làm đúng gần mục tiêu của chế độ.</li>
+            <li>Lấy câu trong ngân hàng, tránh câu đã giao gần đây; thiếu thì AI soạn câu mới (nháp).</li>
+            <li>Thầy/cô xem, chỉnh và <b>duyệt</b> trước khi gửi qua chatbot.</li>
+          </ol>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg w-100"><i class="bi bi-magic"></i> Tạo bộ đề nháp</button>
+    </div>
+  </div>
+</form>
+{% endblock %}

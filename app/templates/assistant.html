@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Trợ lý AI{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="card border-0 shadow-sm chat-card">
+      <div class="card-header bg-white d-flex align-items-center">
+        <span class="brand-mark me-2"><i class="bi bi-stars"></i></span>
+        <div class="me-auto">
+          <h1 class="h6 mb-0">Trợ lý ảo Giáo viên</h1>
+          <div class="small text-muted">Ra lệnh bằng tiếng Việt: giao bài, nhập điểm, xem tình hình lớp, tư vấn soạn bài…</div>
+        </div>
+        <button class="btn btn-sm btn-light border" id="clearChat" title="Xóa lịch sử"><i class="bi bi-trash"></i></button>
+      </div>
+      <div class="card-body chat-body" id="chatBody">
+        <div class="msg msg-assistant">
+          <div class="bubble">Chào {{ teacher.full_name }}! Em có thể giúp thầy/cô tạo bộ đề cá nhân hóa cho cả lớp hoặc từng em, ghi nhận bảng điểm, xem học sinh nào đang tụt điểm, nhờ soạn câu hỏi mới… Mọi bộ đề em tạo đều ở dạng <b>nháp</b> để thầy/cô duyệt trước khi gửi.</div>
+        </div>
+        {% for m in history %}
+        <div class="msg msg-{{ m.role }}" data-md="{{ 1 if m.role == 'assistant' else 0 }}">
+          <div class="bubble">{{ m.content }}</div>
+          {% if m.actions %}<div class="actions">{% for act in m.actions %}<a class="btn btn-sm btn-outline-primary" href="{{ act.url }}">{{ act.label }} <i class="bi bi-arrow-right"></i></a>{% endfor %}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <div class="card-footer bg-white">
+        <form id="chatForm" class="d-flex gap-2 align-items-end">
+          <label class="btn btn-light border mb-0" title="Đính kèm bảng điểm Excel/CSV">
+            <i class="bi bi-paperclip"></i><input type="file" id="chatFile" accept=".xlsx,.csv" hidden>
+          </label>
+          <textarea id="chatInput" class="form-control" rows="2" placeholder="VD: Tạo bộ đề cá nhân hóa cho từng bạn lớp {{ classes[0].name if classes else '10A1' }}, 4 câu, hạn 10h sáng mai" required></textarea>
+          <button class="btn btn-primary" id="chatSend"><i class="bi bi-send"></i></button>
+        </form>
+        <div class="small text-muted mt-1">Enter để gửi · Shift+Enter xuống dòng · đính kèm tệp điểm để trợ lý đọc</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-lightning"></i> Câu lệnh gợi ý</h2></div>
+      <div class="card-body d-flex flex-wrap gap-2">
+        {% set cls = classes[0].name if classes else "10A1" %}
+        {% set examples = [
+          "Tạo bộ đề cá nhân hóa cho từng bạn lớp " ~ cls ~ ", 4 câu, hạn 10h ngày mai",
+          "Bạn Minh Anh là học sinh giỏi, tạo bộ đề nâng cao cho bạn ấy, hạn tối thứ 6",
+          "Tổng quan tình hình lớp " ~ cls,
+          "Học sinh nào đang tụt điểm? Gợi ý cách hỗ trợ",
+          "Có bài nào chờ chấm không?",
+          "Soạn 3 câu vận dụng về vòng lặp while",
+          "Gợi ý hoạt động khởi động 5 phút cho bài Xâu kí tự",
+        ] %}
+        {% for ex in examples %}<button type="button" class="btn btn-sm btn-light border text-start suggestion">{{ ex }}</button>{% endfor %}
+      </div>
+    </div>
+    {% if ai_demo %}
+    <div class="alert alert-warning small"><i class="bi bi-cone-striped"></i> <b>Chế độ demo</b>: trợ lý chỉ hiểu một số câu lệnh mẫu. Thêm <code>GEMINI_API_KEY</code> vào tệp <code>.env</code> để trò chuyện tự do. <a href="/settings">Xem hướng dẫn</a>.</div>
+    {% endif %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body small text-muted">
+        <h3 class="h6 text-body"><i class="bi bi-shield-check"></i> Nguyên tắc</h3>
+        <ul class="ps-3 mb-0">
+          <li>Trợ lý chỉ thao tác qua các công cụ được cấp: tra cứu, ghi điểm, tạo <b>bản nháp</b>.</li>
+          <li>Không bao giờ tự gửi bài cho học sinh – thầy/cô duyệt trên trang Giao bài.</li>
+          <li>Số liệu lấy trực tiếp từ hệ thống, không phỏng đoán.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/assistant.js"></script>{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Đăng ký{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block main_class %}container py-5{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7 col-lg-5">
+    <div class="text-center mb-4">
+      <span class="brand-mark brand-mark-lg"><i class="bi bi-mortarboard-fill"></i></span>
+      <h1 class="h4 mt-3 mb-1">{{ "Thiết lập tài khoản đầu tiên" if first else "Đăng ký tài khoản giáo viên" }}</h1>
+      <p class="text-muted small">{{ app_name }}</p>
+    </div>
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4">
+        {% if errors %}
+        <div class="alert alert-danger py-2"><ul class="mb-0 ps-3">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+        {% endif %}
+        <form method="post" action="/register">
+          {{ csrf() }}
+          <div class="mb-3">
+            <label class="form-label">Họ và tên</label>
+            <input name="full_name" class="form-control" value="{{ full_name or '' }}" placeholder="Nguyễn Văn A" required autofocus>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="{{ email or '' }}" required>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-sm-6">
+              <label class="form-label">Mật khẩu</label>
+              <input type="password" name="password" class="form-control" minlength="6" required>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label">Nhập lại mật khẩu</label>
+              <input type="password" name="password2" class="form-control" minlength="6" required>
+            </div>
+          </div>
+          <button class="btn btn-primary w-100">Tạo tài khoản</button>
+        </form>
+      </div>
+    </div>
+    {% if not first %}<p class="text-center mt-3 small">Đã có tài khoản? <a href="/login">Đăng nhập</a></p>{% endif %}
+  </div>
+</div>
+{% endblock %}

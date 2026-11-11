@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, level_badge, submission_status with context %}
+{% block title %}Bài nộp – {{ sub.student.full_name }}{% endblock %}
+{% block head %}{% if sub.status in ('submitted', 'grading') %}<meta http-equiv="refresh" content="5">{% endif %}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small"><li class="breadcrumb-item"><a href="/grading">Chấm bài</a></li><li class="breadcrumb-item active">{{ sub.student.full_name }}</li></ol></nav>
+
+<div class="page-head d-flex flex-wrap align-items-center gap-2 mb-3">
+  <div class="me-auto">
+    <h1 class="h4 mb-1">{{ sub.student.full_name }} – {{ sub.assignment.title if sub.assignment else "Bài nộp" }}</h1>
+    <div class="small text-muted">Lớp {{ sub.student.classroom.name }} · Nộp {{ sub.submitted_at | localdt }}{% if sub.is_late %} <span class="badge text-bg-danger">nộp muộn</span>{% endif %}
+      {% if sub.assignment and sub.assignment.due_at %} · Hạn {{ sub.assignment.due_at | localdt }}{% endif %}</div>
+  </div>
+  {{ submission_status(sub) }}
+</div>
+
+{% if sub.status in ('submitted', 'grading') %}
+<div class="alert alert-info d-flex align-items-center gap-2"><span class="spinner-border spinner-border-sm"></span> AI đang đọc ảnh và chấm theo rubric. Trang tự cập nhật…</div>
+{% endif %}
+{% if sub.status == 'failed' %}
+<div class="alert alert-danger"><i class="bi bi-exclamation-octagon"></i> AI chưa chấm được bài này: {{ sub.error_message }}. Thầy/cô có thể chấm tay bên dưới hoặc bấm «AI chấm lại».</div>
+{% endif %}
+{% if attention and sub.status == 'ai_graded' %}
+<div class="alert alert-warning small"><i class="bi bi-eye"></i> Có câu AI <b>không chắc chắn</b> (độ tin cậy &lt; {{ "%.0f%%" | format(threshold * 100) }}) hoặc không tìm thấy bài làm – nên xem kỹ ảnh trước khi xác nhận.</div>
+{% endif %}
+{% if sub.status == 'returned' %}
+<div class="alert alert-secondary small"><i class="bi bi-arrow-return-left"></i> Đã yêu cầu học sinh nộp lại: {{ sub.teacher_comment }}</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm sticky-lg-top" style="top: 80px;">
+      <div class="card-header bg-white d-flex align-items-center"><h2 class="h6 mb-0 me-auto"><i class="bi bi-images"></i> Ảnh bài làm ({{ sub.images | length }})</h2>
+        {% if sub.ai_image_quality %}<span class="small text-muted">Chất lượng ảnh: {{ sub.ai_image_quality }}</span>{% endif %}</div>
+      <div class="card-body submission-images">
+        {% for img in sub.images %}
+          {% if img.mime_type == 'application/pdf' %}
+          <a href="/media/images/{{ img.id }}" target="_blank" class="btn btn-light border w-100 mb-2"><i class="bi bi-file-earmark-pdf"></i> Trang {{ img.position }} (PDF)</a>
+          {% else %}
+          <a href="/media/images/{{ img.id }}" target="_blank" title="Mở ảnh gốc"><img src="/media/images/{{ img.id }}" alt="Trang {{ img.position }}" class="img-fluid rounded border mb-2" loading="lazy"></a>
+          {% endif %}
+        {% else %}
+          <p class="text-muted small mb-0">Không có ảnh (dữ liệu nhập tay).</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    {% set editable = sub.status in ('ai_graded', 'failed', 'confirmed') %}
+    <form method="post" action="/grading/{{ sub.id }}/confirm" id="gradeForm">
+      {{ csrf() }}
+      {% if next_id %}<input type="hidden" name="next_id" value="{{ next_id }}" id="nextIdInput" disabled>{% endif %}
+      {% for g in sub.grades %}
+      {% set item = items.get(g.assignment_item_id) %}
+      {% set q = g.question %}
+      <div class="card border-0 shadow-sm mb-3 grade-card">
+        <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
+          <span class="fw-semibold">Câu {{ g.position }}</span>
+          <span class="small text-muted">{{ q.topic.name }}</span>
+          {{ level_badge(q.level) }}
+          <span class="ms-auto"></span>
+          {% if g.confidence is not none %}
+          <span class="badge {{ 'text-bg-warning' if g.confidence < threshold else 'text-bg-light border' }}" title="Độ tin cậy của AI">
+            <i class="bi bi-shield-check"></i> {{ "%.0f%%" | format(g.confidence * 100) }}</span>
+          {% endif %}
+          {% if not g.found %}<span class="badge text-bg-danger">Không thấy bài làm</span>{% endif %}
+        </div>
+        <div class="card-body">
+          <details class="small mb-2"><summary class="text-muted">Đề bài &amp; đáp án tham khảo</summary>
+            <div class="q-content mt-2">{{ q.content }}</div>
+            {% if q.reference_answer %}<div class="ref-answer mt-2">{{ q.reference_answer }}</div>{% endif %}
+          </details>
+          {% if g.transcription %}
+          <div class="small text-muted mb-1"><i class="bi bi-eye"></i> AI đọc được:</div>
+          <pre class="transcription">{{ g.transcription }}</pre>
+          {% endif %}
+          {% if g.criteria %}
+          <table class="table table-sm small mb-2">
+            <thead><tr><th>Tiêu chí</th><th class="text-end text-nowrap">AI chấm</th><th>Nhận xét</th></tr></thead>
+            <tbody>{% for c in g.criteria %}<tr><td>{{ c.criterion }}</td><td class="text-end text-nowrap fw-semibold">{{ c.awarded | score }}/{{ c.max_points | score }}</td><td class="text-muted">{{ c.comment }}</td></tr>{% endfor %}</tbody>
+          </table>
+          {% endif %}
+          {% if g.errors %}
+          <div class="errors-box small mb-2">
+            {% for e in g.errors %}
+            <div class="mb-1"><i class="bi bi-x-circle text-danger"></i> <b>{{ e.description }}</b>{% if e.explanation %} – {{ e.explanation }}{% endif %}{% if e.fix %}<br><span class="text-success"><i class="bi bi-arrow-return-right"></i> {{ e.fix }}</span>{% endif %}</div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if g.ai_comment %}<div class="small mb-3"><i class="bi bi-chat-left-text text-primary"></i> {{ g.ai_comment }}</div>{% endif %}
+
+          <div class="row g-2 align-items-end">
+            <div class="col-sm-4">
+              <label class="form-label small mb-1">Điểm chốt (tối đa {{ g.max_score | score }})</label>
+              <div class="input-group input-group-sm">
+                <input type="number" step="0.25" min="0" max="{{ g.max_score }}" name="score_{{ g.id }}" class="form-control score-input"
+                       value="{{ g.final_score if g.final_score is not none else (g.ai_score if g.ai_score is not none else '') }}" data-max="{{ g.max_score }}" {% if not editable %}disabled{% endif %} {% if g.ai_score is none %}required{% endif %}>
+                <span class="input-group-text">/ {{ g.max_score | score }}</span>
+              </div>
+              {% if g.ai_score is not none %}<div class="form-text">AI đề xuất: {{ g.ai_score | score }}</div>{% endif %}
+            </div>
+            <div class="col-sm-8">
+              <label class="form-label small mb-1">Nhận xét gửi học sinh (để trống = dùng nhận xét của AI)</label>
+              <textarea name="comment_{{ g.id }}" rows="1" class="form-control form-control-sm" {% if not editable %}disabled{% endif %}>{{ g.teacher_comment }}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+      {% if sub.grades %}
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+          {% if sub.ai_summary %}<div class="small mb-3"><i class="bi bi-stars text-primary"></i> <b>Nhận xét chung của AI:</b> {{ sub.ai_summary }}</div>{% endif %}
+          <label class="form-label small">Lời nhận xét của thầy/cô</label>
+          <textarea name="teacher_comment" rows="2" class="form-control mb-3" {% if not editable %}disabled{% endif %}>{{ sub.teacher_comment if sub.status != 'returned' else '' }}</textarea>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <div class="total-box me-auto">Tổng: <b id="totalScore">–</b> / {{ sub.max_total | score }} → <b id="totalTen">–</b>/10</div>
+            {% if editable %}
+            <button class="btn btn-success"><i class="bi bi-check2-circle"></i> {{ "Cập nhật điểm" if sub.status == 'confirmed' else "Xác nhận & gửi kết quả" }}</button>
+            {% if next_id and sub.status != 'confirmed' %}<button class="btn btn-outline-success" onclick="document.getElementById('nextIdInput').disabled = false">Xác nhận &amp; bài tiếp theo <i class="bi bi-arrow-right"></i></button>{% endif %}
+            {% endif %}
+          </div>
+          {% if sub.status == 'confirmed' %}<div class="small text-muted mt-2">Đã xác nhận {{ sub.confirmed_at | localdt }}{% if sub.result_sent_at %} · đã gửi kết quả cho học sinh {{ sub.result_sent_at | localdt }}{% endif %}.</div>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </form>
+
+    {% if sub.status in ('ai_graded', 'failed', 'submitted') %}
+    <div class="d-flex flex-wrap gap-2">
+      {% if sub.status in ('ai_graded', 'failed') %}
+      <form method="post" action="/grading/{{ sub.id }}/regrade" data-confirm="Bỏ kết quả hiện tại và cho AI chấm lại?">{{ csrf() }}<button class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-repeat"></i> AI chấm lại</button></form>
+      {% endif %}
+      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#returnBox"><i class="bi bi-arrow-return-left"></i> Trả bài, yêu cầu nộp lại</button>
+    </div>
+    <div class="collapse mt-2" id="returnBox">
+      <form method="post" action="/grading/{{ sub.id }}/return" class="card card-body border-0 shadow-sm">
+        {{ csrf() }}
+        <label class="form-label small">Lý do (gửi cho học sinh)</label>
+        <input name="reason" class="form-control mb-2" value="Ảnh chưa rõ hoặc thiếu trang, em chụp lại rõ nét, đủ các câu và nộp lại nhé.">
+        <button class="btn btn-secondary btn-sm align-self-start">Gửi yêu cầu nộp lại</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

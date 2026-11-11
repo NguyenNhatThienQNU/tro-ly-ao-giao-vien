@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, mastery_badge, channel_badge, assignment_status, submission_status with context %}
+{% block title %}{{ student.full_name }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="/classes">Lớp học</a></li>
+  <li class="breadcrumb-item"><a href="/classes/{{ student.classroom_id }}">{{ student.classroom.name }}</a></li>
+  <li class="breadcrumb-item active">{{ student.full_name }}</li>
+</ol></nav>
+
+<div class="page-head d-flex flex-wrap align-items-center gap-3 mb-4">
+  <div class="class-avatar avatar-lg">{{ student.given_name[:1] | upper }}</div>
+  <div class="me-auto">
+    <h1 class="h3 mb-1">{{ student.full_name }}</h1>
+    <div class="d-flex flex-wrap gap-2 align-items-center small text-muted">
+      <span>Lớp {{ student.classroom.name }}</span>
+      {% if student.student_code %}<span>· Mã HS {{ student.student_code }}</span>{% endif %}
+      {{ channel_badge(student) }}
+      <span>· Mức nắm vững TB {{ mastery_badge(avg) }}</span>
+    </div>
+  </div>
+  <a href="/assignments/new?class_id={{ student.classroom_id }}&student_id={{ student.id }}" class="btn btn-primary"><i class="bi bi-send"></i> Giao bài riêng</a>
+  <a href="/assignments/new?class_id={{ student.classroom_id }}&student_id={{ student.id }}&mode=advanced" class="btn btn-outline-primary"><i class="bi bi-rocket-takeoff"></i> Bộ đề nâng cao</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-bar-chart"></i> Mức nắm vững từng chủ đề</h2></div>
+      <div class="card-body">
+        <div class="row g-4">
+          <div class="col-lg-7"><canvas id="masteryChart" height="230"></canvas></div>
+          <div class="col-lg-5">
+            <table class="table table-sm align-middle mb-0">
+              <tbody>
+                {% for t in topics %}
+                {% set st = states.get(t.id) %}
+                <tr>
+                  <td class="small">{{ t.name }}</td>
+                  <td class="text-end">{{ mastery_badge(st.pct if st and st.has_data else none) }}</td>
+                  <td class="small text-muted text-end text-nowrap">{{ st.n if st else 0 }} lần</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-graph-up"></i> Diễn biến điểm các bài (thang %)</h2></div>
+      <div class="card-body">
+        {% if chart.trend_values %}<canvas id="trendChart" height="110"></canvas>
+        {% else %}<p class="text-muted small mb-0">Chưa có bài nào được xác nhận điểm.</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-journal-check"></i> Bài đã nộp</h2></div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light"><tr><th>Bài</th><th>Nộp lúc</th><th>Trạng thái</th><th class="text-end">Điểm /10</th><th></th></tr></thead>
+          <tbody>
+            {% for s in submissions %}
+            <tr>
+              <td>{{ s.assignment.title if s.assignment else "—" }}</td>
+              <td class="small">{{ s.submitted_at | localdt }}{% if s.is_late %} <span class="badge text-bg-danger">muộn</span>{% endif %}</td>
+              <td>{{ submission_status(s) }}</td>
+              <td class="text-end fw-semibold">{% if s.final_total is not none %}{{ (s.final_total | ten(s.max_total)) | score }}{% elif s.ai_total is not none %}<span class="text-muted">{{ (s.ai_total | ten(s.max_total)) | score }} (AI)</span>{% else %}–{% endif %}</td>
+              <td class="text-end"><a href="/grading/{{ s.id }}" class="btn btn-sm btn-light">Xem</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-muted text-center py-3">Chưa có bài nộp.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-pencil-square"></i> Thông tin &amp; ghi chú</h2></div>
+      <div class="card-body">
+        <form method="post" action="/students/{{ student.id }}/update">
+          {{ csrf() }}
+          <div class="mb-2"><label class="form-label small">Họ và tên</label><input name="full_name" class="form-control" value="{{ student.full_name }}"></div>
+          <div class="mb-2"><label class="form-label small">Mã học sinh</label><input name="student_code" class="form-control" value="{{ student.student_code }}"></div>
+          <div class="mb-2"><label class="form-label small">Ghi chú (trợ lý AI cũng đọc được)</label><textarea name="note" rows="3" class="form-control" placeholder="VD: học sinh giỏi, thích bài thử thách">{{ student.note }}</textarea></div>
+          <button class="btn btn-light border w-100">Lưu</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-qr-code"></i> Liên kết chatbot</h2></div>
+      <div class="card-body text-center">
+        {% if student.is_linked %}
+        <p class="small mb-2">Đã liên kết <b>{{ student.channel | capitalize }}</b>{% if student.chat_display_name %} ({{ student.chat_display_name }}){% endif %} lúc {{ student.linked_at | localdt }}.</p>
+        {% else %}
+        {% if link_qr %}<div class="qr-inline mb-2">{{ link_qr | safe }}</div>{% endif %}
+        <p class="small mb-1">Mã liên kết</p>
+        <div class="qr-code-text mb-2">{{ student.link_code }}</div>
+        {% endif %}
+        <form method="post" action="/students/{{ student.id }}/reset-link" data-confirm="Hủy liên kết hiện tại (nếu có) và cấp mã mới?">
+          {{ csrf() }}<button class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-repeat"></i> Cấp lại mã</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-list-task"></i> Bộ đề gần đây</h2></div>
+      <ul class="list-group list-group-flush">
+        {% for a in assignments %}
+        <li class="list-group-item d-flex justify-content-between align-items-center small">
+          <a href="{{ '/assignments/batches/%d#a%d' % (a.batch_id, a.id) if a.batch_id else '#' }}" class="text-decoration-none">{{ a.title | truncate_text(40) }}</a>
+          {{ assignment_status(a) }}
+        </li>
+        {% else %}
+        <li class="list-group-item small text-muted">Chưa có bộ đề nào.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-clipboard-data"></i> Điểm nhập từ bảng điểm</h2></div>
+      <ul class="list-group list-group-flush">
+        {% for r in records[:10] %}
+        <li class="list-group-item d-flex justify-content-between small">
+          <span>{{ r.label }}{% if r.topic %} <span class="text-muted">· {{ r.topic.name }}</span>{% endif %}</span>
+          <span class="fw-semibold">{{ r.score | score }}/{{ r.max_score | score }}</span>
+        </li>
+        {% else %}
+        <li class="list-group-item small text-muted">Chưa có.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/chartjs/chart.umd.min.js"></script>
+<script>
+  const chartData = {{ chart | tojson_vn }};
+  const colorFor = (v) => v === null ? "#dee2e6" : v < 50 ? "#fa5252" : v < 70 ? "#fab005" : v < 85 ? "#40c057" : "#2b8a3e";
+  new Chart(document.getElementById("masteryChart"), {
+    type: "bar",
+    data: {
+      labels: chartData.topics,
+      datasets: [{ data: chartData.mastery.map(v => v ?? 0), backgroundColor: chartData.mastery.map(colorFor), borderRadius: 6 }]
+    },
+    options: {
+      indexAxis: "y", plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: (c) => chartData.mastery[c.dataIndex] === null ? "Chưa có dữ liệu" : c.raw + "%" } } },
+      scales: { x: { min: 0, max: 100, ticks: { callback: v => v + "%" } } }
+    }
+  });
+  if (chartData.trend_values.length) {
+    new Chart(document.getElementById("trendChart"), {
+      type: "line",
+      data: { labels: chartData.trend_labels, datasets: [{ data: chartData.trend_values, borderColor: "#3b5bdb", backgroundColor: "rgba(59,91,219,.12)", fill: true, tension: .3, pointRadius: 4 }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { callback: v => v + "%" } } } }
+    });
+  }
+</script>
+{% endblock %}

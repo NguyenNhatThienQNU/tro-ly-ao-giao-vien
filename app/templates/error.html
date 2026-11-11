@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lỗi {{ status }} · {{ app_name }}</title>
+  <link href="/static/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/css/app.css" rel="stylesheet">
+</head>
+<body class="auth-page">
+  <main class="container py-5 text-center">
+    <div class="display-4 fw-bold text-primary">{{ status }}</div>
+    <p class="lead mt-3">{{ detail or "Đã có lỗi xảy ra." }}</p>
+    <a href="/dashboard" class="btn btn-primary mt-2">Về trang tổng quan</a>
+  </main>
+</body>
+</html>

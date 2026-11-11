@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Cấu hình bí mật và dữ liệu thật (ảnh bài làm, CSDL)
+.env
+data/*
+!data/.gitkeep
+
+# Hệ điều hành / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

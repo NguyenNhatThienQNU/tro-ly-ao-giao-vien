@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, heat_cell, mastery_badge, batch_progress with context %}
+{% block title %}Tổng quan{% endblock %}
+{% block content %}
+
+{% if not classes %}
+<div class="row justify-content-center">
+  <div class="col-xl-8">
+    <div class="card border-0 shadow-sm onboarding">
+      <div class="card-body p-4 p-lg-5">
+        <h1 class="h3 mb-2">Chào {{ teacher.full_name }} 👋</h1>
+        <p class="text-muted mb-4">Ba bước để trợ lý ảo bắt đầu giúp thầy/cô giao bài cá nhân hóa và chấm bài qua ảnh:</p>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4"><div class="step-card"><span class="step-num">1</span><h6>Môn học &amp; chủ đề</h6><p class="small text-muted mb-0">Khai báo các chủ đề kiến thức và ngân hàng câu hỏi có rubric chấm.</p></div></div>
+          <div class="col-md-4"><div class="step-card"><span class="step-num">2</span><h6>Lớp &amp; học sinh</h6><p class="small text-muted mb-0">Nhập danh sách từ Excel, in phiếu QR để học sinh liên kết chatbot.</p></div></div>
+          <div class="col-md-4"><div class="step-card"><span class="step-num">3</span><h6>Giao bài &amp; chấm</h6><p class="small text-muted mb-0">AI đề xuất đề riêng cho từng em, chấm ảnh bài làm; thầy/cô duyệt.</p></div></div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <form method="post" action="/onboarding/sample">
+            {{ csrf() }}
+            <button class="btn btn-primary"><i class="bi bi-magic"></i> Nạp dữ liệu mẫu Tin học 10 để dùng thử</button>
+          </form>
+          <a href="/subjects" class="btn btn-outline-primary"><i class="bi bi-diagram-3"></i> Tự tạo môn học</a>
+          <a href="/classes" class="btn btn-outline-secondary"><i class="bi bi-people"></i> Tạo lớp</a>
+        </div>
+        <p class="small text-muted mt-3 mb-0">Dữ liệu mẫu gồm 6 chủ đề lập trình Python, 25 câu hỏi có rubric và một lớp 10 học sinh với lịch sử 3 tuần học. Có thể xóa bất cứ lúc nào.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+
+<div class="page-head d-flex flex-wrap align-items-center gap-3 mb-4">
+  <div class="me-auto">
+    <h1 class="h3 mb-0">Tổng quan lớp {{ classroom.name }}</h1>
+    <div class="text-muted small">{{ classroom.subject.name }}{% if classroom.school_year %} · Năm học {{ classroom.school_year }}{% endif %}</div>
+  </div>
+  {% if classes | length > 1 %}
+  <div class="dropdown">
+    <button class="btn btn-light border dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-collection"></i> Đổi lớp</button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      {% for c in classes %}<li><a class="dropdown-item {% if c.id == classroom.id %}active{% endif %}" href="/dashboard?class_id={{ c.id }}">{{ c.name }}</a></li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  <a href="/assignments/new?class_id={{ classroom.id }}" class="btn btn-primary"><i class="bi bi-send-plus"></i> Giao bài cá nhân hóa</a>
+  <a href="/assistant" class="btn btn-outline-primary"><i class="bi bi-stars"></i> Hỏi trợ lý</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3 col-xxl">
+    <div class="kpi-card"><div class="kpi-icon bg-primary-subtle text-primary"><i class="bi bi-people"></i></div>
+      <div><div class="kpi-value">{{ kpi.students }}</div><div class="kpi-label">Học sinh · {{ kpi.linked }} đã liên kết bot</div></div></div>
+  </div>
+  <div class="col-6 col-lg-3 col-xxl">
+    <div class="kpi-card"><div class="kpi-icon bg-success-subtle text-success"><i class="bi bi-bullseye"></i></div>
+      <div><div class="kpi-value">{{ "%.0f%%" | format(kpi.class_avg) if kpi.class_avg is not none else "–" }}</div><div class="kpi-label">Mức nắm vững trung bình</div></div></div>
+  </div>
+  <div class="col-6 col-lg-3 col-xxl">
+    <a href="/grading" class="kpi-card text-decoration-none"><div class="kpi-icon bg-warning-subtle text-warning-emphasis"><i class="bi bi-hourglass-split"></i></div>
+      <div><div class="kpi-value">{{ kpi.pending }}</div><div class="kpi-label">Bài chờ xác nhận điểm</div></div></a>
+  </div>
+  <div class="col-6 col-lg-3 col-xxl">
+    <div class="kpi-card"><div class="kpi-icon bg-info-subtle text-info-emphasis"><i class="bi bi-inboxes"></i></div>
+      <div><div class="kpi-value">{{ "%d%%" | format(kpi.latest_done_pct) if kpi.latest_done_pct is not none else "–" }}</div><div class="kpi-label">Đã nộp – đợt giao gần nhất</div></div></div>
+  </div>
+  <div class="col-12 col-lg-3 col-xxl">
+    <div class="kpi-card"><div class="kpi-icon bg-danger-subtle text-danger"><i class="bi bi-bell"></i></div>
+      <div><div class="kpi-value">{{ kpi.alerts }}</div><div class="kpi-label">Cảnh báo cần chú ý</div></div></div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
+        <h2 class="h6 mb-0 me-auto"><i class="bi bi-grid-3x3-gap"></i> Mức nắm vững theo chủ đề (%)</h2>
+        <div class="legend small">
+          <span class="legend-item"><span class="swatch m-low"></span>&lt;50</span>
+          <span class="legend-item"><span class="swatch m-mid"></span>50–69</span>
+          <span class="legend-item"><span class="swatch m-good"></span>70–84</span>
+          <span class="legend-item"><span class="swatch m-high"></span>≥85</span>
+          <span class="legend-item"><span class="swatch m-none"></span>chưa có</span>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        {% if not rows %}
+        <p class="text-muted p-4 mb-0">Lớp chưa có học sinh. <a href="/classes/{{ classroom.id }}">Thêm học sinh</a>.</p>
+        {% elif not topics %}
+        <p class="text-muted p-4 mb-0">Môn học chưa có chủ đề. <a href="/subjects">Thêm chủ đề</a>.</p>
+        {% else %}
+        <div class="table-responsive heatmap-wrap">
+          <table class="table table-sm heatmap mb-0">
+            <thead>
+              <tr>
+                <th class="sticky-col">Học sinh</th>
+                <th class="text-center">TB</th>
+                {% for t in topics %}<th class="text-center topic-head" title="{{ t.name }}">{{ t.name }}</th>{% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in rows %}
+              <tr>
+                <td class="sticky-col"><a href="/students/{{ r.student.id }}" class="text-decoration-none">{{ r.student.full_name }}</a>
+                  {% if not r.student.is_linked %}<i class="bi bi-link-45deg text-muted" title="Chưa liên kết chatbot"></i>{% endif %}</td>
+                <td class="text-center">{{ mastery_badge(r.avg) }}</td>
+                {% for state in r.cells %}{{ heat_cell(state) }}{% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th class="sticky-col">Trung bình lớp</th><th></th>
+                {% for avg in topic_avgs %}<th class="text-center">{{ mastery_badge(avg) }}</th>{% endfor %}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-footer bg-white small text-muted">
+        Ước lượng bằng mô hình Elo từ các bài giáo viên đã xác nhận điểm và bảng điểm nhập vào. Xếp học sinh yếu lên đầu.
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-bell"></i> Cảnh báo sớm</h2></div>
+      <div class="list-group list-group-flush alert-list">
+        {% for a in alerts[:12] %}
+        <div class="list-group-item d-flex gap-2">
+          <i class="bi bi-{{ a.icon }} text-{{ a.severity }} mt-1"></i>
+          <div class="small">
+            {% if a.student_id %}<a href="/students/{{ a.student_id }}" class="fw-semibold text-decoration-none">{{ a.student_name }}</a><br>{% endif %}
+            {{ a.message }}
+          </div>
+        </div>
+        {% else %}
+        <div class="list-group-item text-muted small"><i class="bi bi-emoji-smile"></i> Chưa có cảnh báo nào.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex align-items-center">
+        <h2 class="h6 mb-0 me-auto"><i class="bi bi-send"></i> Các đợt giao bài</h2>
+        <a href="/assignments?class_id={{ classroom.id }}" class="small">Tất cả</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for b, stats in batches %}
+        <a href="/assignments/batches/{{ b.id }}" class="list-group-item list-group-item-action">
+          <div class="d-flex justify-content-between">
+            <span class="fw-semibold small">{{ b.title }}</span>
+            {% if stats.draft %}<span class="badge text-bg-warning">{{ stats.draft }} chờ duyệt</span>{% endif %}
+          </div>
+          <div class="small text-muted mb-1">{% if b.due_at %}Hạn {{ b.due_at | localdt }}{% else %}Không đặt hạn{% endif %}{% if stats.overdue %} · <span class="text-danger">{{ stats.overdue }} quá hạn</span>{% endif %}</div>
+          {{ batch_progress(stats) }}
+        </a>
+        {% else %}
+        <div class="list-group-item small text-muted">Chưa giao bài nào. <a href="/assignments/new?class_id={{ classroom.id }}">Giao bài ngay</a>.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

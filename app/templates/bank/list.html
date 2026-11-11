@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, level_badge with context %}
+{% block title %}Ngân hàng câu hỏi{% endblock %}
+{% block content %}
+<div class="page-head d-flex flex-wrap align-items-center gap-2 mb-4">
+  <div class="me-auto">
+    <h1 class="h3 mb-0">Ngân hàng câu hỏi</h1>
+    <div class="small text-muted">Câu hỏi tự luận có rubric chấm – nguồn để hệ thống chọn bài cá nhân hóa và để AI chấm bài.</div>
+  </div>
+  <a href="/subjects" class="btn btn-light border"><i class="bi bi-diagram-3"></i> Chủ đề</a>
+  <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#genModal"><i class="bi bi-stars"></i> AI soạn câu hỏi</button>
+  <a href="/bank/new?subject_id={{ subject.id }}{% if filters.topic_id %}&topic_id={{ filters.topic_id }}{% endif %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm câu hỏi</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <form method="get" action="/bank" id="bankFilter">
+          <label class="form-label small">Môn học</label>
+          <select name="subject_id" class="form-select form-select-sm mb-3" onchange="this.form.submit()">
+            {% for s in subjects %}<option value="{{ s.id }}" {% if s.id == subject.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+          </select>
+          <label class="form-label small">Chủ đề</label>
+          <select name="topic_id" class="form-select form-select-sm mb-3" onchange="this.form.submit()">
+            <option value="">Tất cả chủ đề</option>
+            {% for t in subject.topics %}<option value="{{ t.id }}" {% if t.id == filters.topic_id %}selected{% endif %}>{{ t.name }}</option>{% endfor %}
+          </select>
+          <label class="form-label small">Mức độ</label>
+          <select name="level" class="form-select form-select-sm mb-3" onchange="this.form.submit()">
+            <option value="">Tất cả mức độ</option>
+            {% for lv, name in LEVELS.items() %}<option value="{{ lv }}" {% if lv == filters.level %}selected{% endif %}>{{ name }}</option>{% endfor %}
+          </select>
+          <label class="form-label small">Trạng thái</label>
+          <select name="status" class="form-select form-select-sm mb-3" onchange="this.form.submit()">
+            <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Đang dùng</option>
+            <option value="draft" {% if filters.status == 'draft' %}selected{% endif %}>Nháp chờ duyệt ({{ draft_count }})</option>
+            <option value="archived" {% if filters.status == 'archived' %}selected{% endif %}>Đã lưu trữ</option>
+            <option value="all" {% if filters.status == 'all' %}selected{% endif %}>Tất cả</option>
+          </select>
+          <input name="q" value="{{ filters.q }}" class="form-control form-control-sm" placeholder="Tìm nội dung…">
+        </form>
+      </div>
+    </div>
+    {% if draft_count and filters.status != 'draft' %}
+    <a href="/bank?subject_id={{ subject.id }}&status=draft" class="alert alert-warning d-block mt-3 small text-decoration-none"><i class="bi bi-hourglass-split"></i> {{ draft_count }} câu AI soạn đang chờ duyệt</a>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-9">
+    <div class="small text-muted mb-2">{{ questions | length }} câu hỏi</div>
+    {% for q in questions %}
+    <div class="card border-0 shadow-sm mb-3 question-card {% if q.status == 'draft' %}is-draft{% endif %}">
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <span class="badge text-bg-light border">{{ q.topic.name }}</span>
+          {{ level_badge(q.level) }}
+          <span class="badge text-bg-light border">{{ q.max_score | score }} điểm</span>
+          {% if q.source == 'ai' %}<span class="badge text-bg-purple"><i class="bi bi-stars"></i> AI soạn</span>{% endif %}
+          {% if q.status == 'draft' %}<span class="badge text-bg-warning">Chờ duyệt</span>{% elif q.status == 'archived' %}<span class="badge text-bg-secondary">Lưu trữ</span>{% endif %}
+          <span class="ms-auto small text-muted">#{{ q.id }}</span>
+        </div>
+        <div class="q-content">{{ q.content }}</div>
+        <details class="mt-2 small">
+          <summary class="text-muted">Rubric ({{ q.rubric | length }} tiêu chí) &amp; đáp án tham khảo</summary>
+          <ul class="mt-2 mb-2">{% for r in q.rubric %}<li>[{{ r.points | score }}đ] {{ r.criterion }}</li>{% endfor %}</ul>
+          {% if q.reference_answer %}<div class="ref-answer">{{ q.reference_answer }}</div>{% endif %}
+        </details>
+        <div class="d-flex gap-2 mt-3">
+          <a href="/bank/{{ q.id }}/edit" class="btn btn-sm btn-light border"><i class="bi bi-pencil"></i> Sửa</a>
+          {% if q.status == 'draft' %}
+          <form method="post" action="/bank/{{ q.id }}/status">{{ csrf() }}<input type="hidden" name="status" value="active"><button class="btn btn-sm btn-success"><i class="bi bi-check2"></i> Duyệt</button></form>
+          {% endif %}
+          {% if q.status != 'archived' %}
+          <form method="post" action="/bank/{{ q.id }}/status">{{ csrf() }}<input type="hidden" name="status" value="archived"><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-archive"></i> Lưu trữ</button></form>
+          {% else %}
+          <form method="post" action="/bank/{{ q.id }}/status">{{ csrf() }}<input type="hidden" name="status" value="active"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-arrow-counterclockwise"></i> Dùng lại</button></form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm"><div class="card-body text-muted">Không có câu hỏi phù hợp bộ lọc.</div></div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="modal fade" id="genModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="/bank/generate" data-loading="AI đang soạn câu hỏi…">
+      {{ csrf() }}
+      <div class="modal-header"><h5 class="modal-title"><i class="bi bi-stars"></i> Nhờ AI soạn câu hỏi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <label class="form-label">Chủ đề</label>
+        <select name="topic_id" class="form-select mb-3" required>
+          {% for t in subject.topics %}<option value="{{ t.id }}" {% if t.id == filters.topic_id %}selected{% endif %}>{{ t.name }}</option>{% endfor %}
+        </select>
+        <div class="row g-2 mb-3">
+          <div class="col-8"><label class="form-label">Mức độ</label>
+            <select name="level" class="form-select">{% for lv, name in LEVELS.items() %}<option value="{{ lv }}" {% if lv == 3 %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></div>
+          <div class="col-4"><label class="form-label">Số câu</label><input name="count" type="number" min="1" max="6" value="3" class="form-control"></div>
+        </div>
+        <label class="form-label">Yêu cầu thêm (không bắt buộc)</label>
+        <textarea name="instruction" class="form-control" rows="2" placeholder="VD: gắn với tình huống thực tế ở trường học"></textarea>
+        <div class="form-text">Câu hỏi được tạo ở trạng thái <b>nháp</b>; thầy/cô kiểm tra rồi mới duyệt vào ngân hàng.</div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-primary"><i class="bi bi-stars"></i> Soạn</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Lớp học{% endblock %}
+{% block content %}
+<div class="page-head d-flex align-items-center mb-4">
+  <h1 class="h3 mb-0 me-auto">Lớp học</h1>
+</div>
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="row g-3">
+      {% for c in classes %}
+      <div class="col-md-6">
+        <a href="/classes/{{ c.id }}" class="card border-0 shadow-sm h-100 text-decoration-none class-card">
+          <div class="card-body">
+            <div class="d-flex align-items-start">
+              <div class="class-avatar me-3">{{ c.name[:2] | upper }}</div>
+              <div>
+                <h2 class="h5 mb-1 text-body">{{ c.name }}</h2>
+                <div class="small text-muted">{{ c.subject.name }}{% if c.school_year %} · {{ c.school_year }}{% endif %}</div>
+              </div>
+            </div>
+            <div class="d-flex gap-3 mt-3 small text-muted">
+              <span><i class="bi bi-people"></i> {{ c.students | length }} học sinh</span>
+              <span><i class="bi bi-link-45deg"></i> {{ c.students | selectattr("is_linked") | list | length }} đã liên kết</span>
+              <span><i class="bi bi-send"></i> {{ c.batches | length }} đợt giao bài</span>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% else %}
+      <div class="col-12"><div class="card border-0 shadow-sm"><div class="card-body text-muted">Chưa có lớp nào. Tạo lớp ở khung bên phải.</div></div></div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-plus-circle"></i> Tạo lớp mới</h2></div>
+      <div class="card-body">
+        <form method="post" action="/classes">
+          {{ csrf() }}
+          <div class="mb-3">
+            <label class="form-label">Tên lớp</label>
+            <input name="name" class="form-control" placeholder="VD: 10 TOÁN" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Năm học</label>
+            <input name="school_year" class="form-control" placeholder="2026-2027">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Môn học</label>
+            <select name="subject_id" class="form-select">
+              <option value="">— Chọn môn đã có —</option>
+              {% for s in subjects %}<option value="{{ s.id }}">{{ s.name }} ({{ s.topics | length }} chủ đề)</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <input name="new_subject" class="form-control form-control-sm" placeholder="… hoặc nhập tên môn mới, VD: Tin học 10">
+          </div>
+          <button class="btn btn-primary w-100">Tạo lớp</button>
+        </form>
+        <hr>
+        <a href="/subjects" class="small"><i class="bi bi-diagram-3"></i> Quản lý môn học &amp; chủ đề</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Cài đặt & kết nối{% endblock %}
+{% block content %}
+<div class="page-head mb-4">
+  <h1 class="h3 mb-0">Cài đặt &amp; kết nối</h1>
+  <div class="small text-muted">Các thông số đọc từ tệp <code>.env</code> ở thư mục dự án. Sửa tệp rồi khởi động lại máy chủ để áp dụng.</div>
+</div>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white d-flex align-items-center"><h2 class="h6 mb-0 me-auto"><i class="bi bi-stars"></i> Trí tuệ nhân tạo</h2>
+        {% if ai.is_real %}<span class="badge text-bg-success">Đang hoạt động</span>{% else %}<span class="badge text-bg-warning">Chế độ demo</span>{% endif %}</div>
+      <div class="card-body small">
+        <dl class="row mb-3">
+          <dt class="col-5">Nhà cung cấp</dt><dd class="col-7">{{ "Google Gemini" if ai.name == "gemini" else "Demo (mô phỏng)" }}</dd>
+          {% if ai.is_real %}<dt class="col-5">Mô hình</dt><dd class="col-7"><code>{{ ai.model }}</code></dd>{% endif %}
+          <dt class="col-5">Ngưỡng “cần xem kỹ”</dt><dd class="col-7">độ tin cậy &lt; {{ "%.0f%%" | format(settings.low_confidence_threshold * 100) }}</dd>
+        </dl>
+        {% if not ai.is_real %}
+        <ol class="ps-3 mb-0">
+          <li>Vào <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>, đăng nhập Google, bấm <b>Create API key</b>.</li>
+          <li>Mở tệp <code>.env</code>, điền <code>GEMINI_API_KEY=…</code></li>
+          <li>Khởi động lại máy chủ.</li>
+        </ol>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white d-flex align-items-center"><h2 class="h6 mb-0 me-auto"><i class="bi bi-telegram"></i> Chatbot Telegram</h2>
+        {% if telegram %}<span class="badge text-bg-success">Đang chạy</span>{% else %}<span class="badge text-bg-secondary">Chưa bật</span>{% endif %}</div>
+      <div class="card-body small">
+        {% if telegram %}
+        <dl class="row mb-0">
+          <dt class="col-5">Bot</dt><dd class="col-7"><a href="https://t.me/{{ telegram.username }}" target="_blank" rel="noopener">@{{ telegram.username }}</a></dd>
+          <dt class="col-5">Chế độ</dt><dd class="col-7">{{ telegram.mode }}</dd>
+          <dt class="col-5">Học sinh của tôi</dt><dd class="col-7">{{ total_students }}</dd>
+        </dl>
+        {% else %}
+        <ol class="ps-3 mb-0">
+          <li>Trên Telegram, nhắn <b>@BotFather</b> → <code>/newbot</code> → đặt tên → nhận <b>token</b>.</li>
+          <li>Điền <code>TELEGRAM_BOT_TOKEN=…</code> vào <code>.env</code> (giữ <code>TELEGRAM_MODE=polling</code> khi chạy trên máy cá nhân).</li>
+          <li>Khởi động lại máy chủ, sau đó in phiếu QR cho từng lớp.</li>
+        </ol>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white d-flex align-items-center"><h2 class="h6 mb-0 me-auto"><i class="bi bi-chat-dots"></i> Chatbot Zalo <span class="badge text-bg-light border">thử nghiệm</span></h2>
+        {% if zalo %}<span class="badge text-bg-success">Đang chạy</span>{% else %}<span class="badge text-bg-secondary">Chưa bật</span>{% endif %}</div>
+      <div class="card-body small">
+        {% if zalo %}
+        <p class="mb-0">Bot: <b>{{ zalo.account_name or "Zalo Bot" }}</b> · chế độ {{ zalo.mode }}. Học sinh mở bot và gửi mã liên kết 8 ký tự.</p>
+        {% else %}
+        <p class="mb-2">Tạo bot tại <a href="https://bot.zaloplatforms.com" target="_blank" rel="noopener">bot.zaloplatforms.com</a>, điền <code>ZALO_BOT_TOKEN</code> và <code>ZALO_BOT_LINK</code> trong <code>.env</code>.</p>
+        <p class="text-muted mb-0">Zalo Bot chưa có nút bấm; học sinh gõ lệnh (NOP, HUY, BAITAP…). Nên thử với vài em trước khi dùng cho cả lớp.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white"><h2 class="h6 mb-0"><i class="bi bi-hdd-network"></i> Máy chủ</h2></div>
+      <div class="card-body small">
+        <dl class="row mb-0">
+          <dt class="col-5">Phiên bản</dt><dd class="col-7">{{ version }}</dd>
+          <dt class="col-5">Địa chỉ công khai</dt><dd class="col-7"><code>{{ settings.public_base_url }}</code></dd>
+          <dt class="col-5">Múi giờ</dt><dd class="col-7">{{ settings.timezone }}</dd>
+          <dt class="col-5">Nhắc hạn trước</dt><dd class="col-7">{{ settings.reminder_hours_before }} giờ</dd>
+          <dt class="col-5">CSDL</dt><dd class="col-7"><code>{{ settings.resolved_database_url.split("://")[0] }}</code></dd>
+          <dt class="col-5">Tài liệu API</dt><dd class="col-7"><a href="/api/docs" target="_blank">/api/docs</a></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token }}">{% endmacro %}
+
+{% macro level_badge(level) -%}
+{%- set colors = {1: "secondary", 2: "info", 3: "primary", 4: "danger"} -%}
+<span class="badge level-badge text-bg-{{ colors.get(level, 'secondary') }}">{{ LEVELS.get(level, level) }}</span>
+{%- endmacro %}
+
+{% macro mastery_badge(pct) -%}
+{%- if pct is none -%}
+<span class="badge m-badge m-none">–</span>
+{%- else -%}
+<span class="badge m-badge {{ pct | mcss }}" title="{{ pct | mlabel }}">{{ "%.0f" | format(pct) }}%</span>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro heat_cell(state) -%}
+{%- if state and state.has_data -%}
+<td class="heat {{ state.css }}" title="{{ state.label }} · {{ state.n }} lần đánh giá">{{ "%.0f" | format(state.pct) }}</td>
+{%- else -%}
+<td class="heat m-none" title="Chưa có dữ liệu">·</td>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro assignment_status(a) -%}
+{%- set colors = {"draft": "warning", "assigned": "primary", "submitted": "info", "graded": "success", "cancelled": "secondary"} -%}
+<span class="badge text-bg-{{ colors.get(a.status, 'secondary') }}">{{ a.status_label }}</span>
+{%- endmacro %}
+
+{% macro submission_status(s) -%}
+{%- set colors = {"collecting": "light", "submitted": "info", "grading": "info", "ai_graded": "warning", "confirmed": "success", "returned": "secondary", "failed": "danger"} -%}
+<span class="badge text-bg-{{ colors.get(s.status, 'secondary') }}">
+  {% if s.status in ("submitted", "grading") %}<span class="spinner-grow spinner-grow-sm me-1"></span>{% endif %}{{ s.status_label }}
+</span>
+{%- endmacro %}
+
+{% macro channel_badge(student) -%}
+{%- if student.is_linked -%}
+<span class="badge rounded-pill text-bg-success-subtle text-success-emphasis border border-success-subtle" title="Liên kết lúc {{ student.linked_at | localdt }}">
+  <i class="bi bi-{{ 'telegram' if student.channel == 'telegram' else 'chat-dots' }}"></i> {{ student.channel | capitalize }}
+</span>
+{%- else -%}
+<span class="badge rounded-pill text-bg-light border" title="Chưa liên kết chatbot"><i class="bi bi-link-45deg"></i> Chưa liên kết</span>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro batch_progress(stats) -%}
+{%- set active_total = stats.active or 0 -%}
+<div class="d-flex align-items-center gap-2">
+  <div class="progress flex-grow-1" style="height: 8px;" title="Đã nộp {{ stats.done }}/{{ active_total }}">
+    {% if active_total %}
+    <div class="progress-bar bg-success" style="width: {{ (100 * stats.graded / active_total) | round(1) }}%"></div>
+    <div class="progress-bar bg-info" style="width: {{ (100 * stats.submitted / active_total) | round(1) }}%"></div>
+    {% endif %}
+  </div>
+  <small class="text-muted text-nowrap">{{ stats.done }}/{{ active_total }}</small>
+</div>
+{%- endmacro %}
+
+{% macro empty_state(icon, title, text) -%}
+<div class="empty-state text-center py-5">
+  <div class="empty-icon"><i class="bi bi-{{ icon }}"></i></div>
+  <h5 class="mt-3">{{ title }}</h5>
+  <p class="text-muted mb-3">{{ text }}</p>
+  {{ caller() if caller }}
+</div>
+{%- endmacro %}

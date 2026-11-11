@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Phiếu QR lớp {{ classroom.name }}{% endblock %}
+{% block body_class %}print-page{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3 no-print">
+  <div class="me-auto">
+    <h1 class="h4 mb-0">Phiếu liên kết chatbot – lớp {{ classroom.name }}</h1>
+    <div class="small text-muted">In ra, cắt rời và phát cho từng học sinh. Mỗi mã chỉ dùng cho một tài khoản chat.</div>
+  </div>
+  <a href="/classes/{{ classroom.id }}" class="btn btn-light border"><i class="bi bi-arrow-left"></i> Quay lại</a>
+  <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer"></i> In phiếu</button>
+</div>
+{% if not telegram and not zalo_link %}
+<div class="alert alert-warning no-print">Chưa bật chatbot nên phiếu chỉ có mã liên kết. Cấu hình <code>TELEGRAM_BOT_TOKEN</code> trong tệp .env rồi khởi động lại để có mã QR quét-là-liên-kết.</div>
+{% endif %}
+<div class="qr-grid">
+  {% for c in cards %}
+  <div class="qr-card">
+    <div class="qr-head">
+      <div class="fw-bold">{{ c.student.full_name }}</div>
+      <div class="small text-muted">Lớp {{ classroom.name }} · {{ classroom.subject.name }}</div>
+    </div>
+    <div class="qr-body">
+      {% if c.qr %}
+      <div class="qr-img">{{ c.qr | safe }}</div>
+      {% endif %}
+      <div class="qr-info">
+        <div class="small text-muted">Mã liên kết</div>
+        <div class="qr-code-text">{{ c.student.link_code }}</div>
+        {% if c.qr %}
+        <div class="small">📱 Mở camera/Telegram, quét mã QR rồi bấm <b>Start</b>.</div>
+        <div class="small text-muted">Hoặc tìm <b>@{{ telegram.username }}</b> và gửi mã trên.</div>
+        {% elif zalo_link %}
+        <div class="small">💬 Mở bot Zalo của lớp và gửi mã trên.</div>
+        {% else %}
+        <div class="small">Gửi mã này cho chatbot của lớp để liên kết.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% if zalo_qr %}
+<div class="qr-card mt-3" style="max-width: 360px;">
+  <div class="qr-head fw-bold">Bot Zalo của lớp</div>
+  <div class="qr-body"><div class="qr-img">{{ zalo_qr | safe }}</div><div class="qr-info small">Quét để mở bot Zalo, sau đó gửi mã liên kết in trên phiếu của em.</div></div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, level_badge, mastery_badge, assignment_status, submission_status, batch_progress with context %}
+{% block title %}{{ batch.title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="/assignments">Giao bài</a></li>
+  <li class="breadcrumb-item"><a href="/classes/{{ classroom.id }}">{{ classroom.name }}</a></li>
+  <li class="breadcrumb-item active">{{ batch.title }}</li>
+</ol></nav>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <div class="d-flex flex-wrap gap-3 align-items-start">
+      <div class="me-auto">
+        <h1 class="h4 mb-1">{{ batch.title }}</h1>
+        <div class="small text-muted">
+          Lớp {{ classroom.name }} · {{ MODE_LABELS.get(batch.mode, batch.mode) }} · {{ batch.num_questions }} câu/bộ đề
+          {% if batch.created_by == 'assistant' %} · <i class="bi bi-stars"></i> tạo bởi trợ lý AI{% endif %}
+        </div>
+        {% if batch.instruction %}<div class="small mt-1"><i class="bi bi-chat-left-quote"></i> {{ batch.instruction }}</div>{% endif %}
+      </div>
+      <form method="post" action="/assignments/batches/{{ batch.id }}/due" class="d-flex gap-2 align-items-center">
+        {{ csrf() }}
+        <label class="small text-muted text-nowrap">Hạn nộp</label>
+        <input type="datetime-local" name="due_at" class="form-control form-control-sm" value="{{ batch.due_at | input_dt }}">
+        <button class="btn btn-sm btn-light border">Lưu</button>
+      </form>
+      {% if stats.draft %}
+      <form method="post" action="/assignments/batches/{{ batch.id }}/approve" data-confirm="Duyệt {{ stats.draft }} bộ đề và gửi cho học sinh qua chatbot?">
+        {{ csrf() }}<button class="btn btn-success"><i class="bi bi-check2-all"></i> Duyệt &amp; gửi tất cả ({{ stats.draft }})</button>
+      </form>
+      {% endif %}
+      {% if stats.draft == stats.total %}
+      <form method="post" action="/assignments/batches/{{ batch.id }}/delete" data-confirm="Xóa đợt giao bài nháp này?">
+        {{ csrf() }}<button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button>
+      </form>
+      {% endif %}
+    </div>
+    <div class="row g-3 mt-2 small">
+      <div class="col-6 col-md-2"><div class="stat-pill"><b>{{ stats.draft }}</b> chờ duyệt</div></div>
+      <div class="col-6 col-md-2"><div class="stat-pill"><b>{{ stats.assigned }}</b> đã giao</div></div>
+      <div class="col-6 col-md-2"><div class="stat-pill"><b>{{ stats.sent }}</b> đã gửi bot</div></div>
+      <div class="col-6 col-md-2"><div class="stat-pill"><b>{{ stats.submitted }}</b> đã nộp</div></div>
+      <div class="col-6 col-md-2"><div class="stat-pill"><b>{{ stats.graded }}</b> đã chấm</div></div>
+      <div class="col-6 col-md-2"><div class="stat-pill {% if stats.overdue %}text-danger{% endif %}"><b>{{ stats.overdue }}</b> quá hạn</div></div>
+    </div>
+    <div class="mt-3">{{ batch_progress(stats) }}</div>
+  </div>
+</div>
+
+{% if not hub_channels %}
+<div class="alert alert-info small"><i class="bi bi-info-circle"></i> Chatbot chưa bật: bộ đề đã duyệt sẽ được lưu ở trạng thái chờ gửi và tự gửi khi bật bot (học sinh đã liên kết).</div>
+{% endif %}
+
+<div class="row g-4">
+  {% for a in batch.assignments %}
+  {% set states = table.get(a.student_id, {}) %}
+  {% set known = states.values() | selectattr("has_data") | map(attribute="pct") | list %}
+  <div class="col-xl-6" id="a{{ a.id }}">
+    <div class="card border-0 shadow-sm h-100 assignment-card status-{{ a.status }}">
+      <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
+        <a href="/students/{{ a.student_id }}" class="fw-semibold text-decoration-none me-1">{{ a.student.full_name }}</a>
+        {{ mastery_badge((known | sum / known | length) if known else none) }}
+        <span class="ms-auto"></span>
+        {% if a.status == 'assigned' %}
+          {% if a.sent_at %}<span class="small text-success"><i class="bi bi-check2-circle"></i> Đã gửi {{ a.sent_at | localdt("%H:%M %d/%m") }}</span>
+          {% elif not a.student.is_linked %}<span class="small text-muted"><i class="bi bi-hourglass"></i> Chờ HS liên kết bot</span>
+          {% else %}<span class="small text-muted"><i class="bi bi-hourglass"></i> Đang chờ gửi</span>{% endif %}
+        {% endif %}
+        {{ assignment_status(a) }}
+      </div>
+      <div class="card-body">
+        <div class="rationale small mb-3"><i class="bi bi-cpu"></i> {{ a.rationale }}</div>
+        <ol class="question-list mb-2">
+          {% for item in a.items %}
+          {% set q = item.question %}
+          <li>
+            <div class="d-flex flex-wrap align-items-center gap-1 mb-1">
+              <span class="small fw-semibold">{{ q.topic.name }}</span>
+              {{ level_badge(q.level) }}
+              <span class="badge text-bg-light border">{{ q.max_score | score }}đ</span>
+              {% if q.status == 'draft' %}<span class="badge text-bg-purple" title="Câu do AI soạn – được duyệt cùng bộ đề"><i class="bi bi-stars"></i> AI soạn mới</span>{% endif %}
+              {% if a.status == 'draft' %}
+              <form method="post" action="/assignments/{{ a.id }}/items/{{ item.id }}/remove" class="ms-auto">{{ csrf() }}<button class="btn btn-sm btn-link text-danger p-0" title="Bỏ câu này"><i class="bi bi-x-circle"></i></button></form>
+              {% endif %}
+            </div>
+            <details class="small"><summary class="text-body">{{ q.content | truncate_text(140) }}</summary><div class="q-content mt-2">{{ q.content }}</div>
+              {% if q.reference_answer %}<div class="ref-answer mt-2">{{ q.reference_answer }}</div>{% endif %}</details>
+          </li>
+          {% else %}
+          <li class="text-muted small list-unstyled">Chưa có câu hỏi – hãy thêm câu từ ngân hàng.</li>
+          {% endfor %}
+        </ol>
+        {% if a.status == 'draft' %}
+        <form method="post" action="/assignments/{{ a.id }}/items/add" class="input-group input-group-sm mb-2">
+          {{ csrf() }}
+          <select name="question_id" class="form-select">
+            {% for t in classroom.subject.topics %}
+            <optgroup label="{{ t.name }}">
+              {% for q in bank if q.topic_id == t.id %}<option value="{{ q.id }}">[{{ LEVELS[q.level] }}] {{ q.content | truncate_text(70) }}</option>{% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+          <button class="btn btn-outline-primary"><i class="bi bi-plus"></i> Thêm câu</button>
+        </form>
+        {% endif %}
+        {% if a.status in ('draft', 'assigned') %}
+        <form method="post" action="/assignments/{{ a.id }}/note" class="input-group input-group-sm">
+          {{ csrf() }}
+          <input name="note" class="form-control" value="{{ a.note }}" placeholder="Lời nhắn riêng cho {{ a.student.given_name }} (gửi kèm đề)">
+          <button class="btn btn-light border">Lưu</button>
+        </form>
+        {% elif a.note %}<div class="small"><i class="bi bi-chat-dots"></i> {{ a.note }}</div>{% endif %}
+      </div>
+      <div class="card-footer bg-white d-flex flex-wrap gap-2 align-items-center">
+        <span class="small text-muted me-auto">{{ a.items | length }} câu · {{ a.max_total | score }} điểm</span>
+        {% for s in a.submissions if s.status != 'collecting' %}
+          <a href="/grading/{{ s.id }}" class="btn btn-sm btn-light border">{{ submission_status(s) }} Xem bài nộp</a>
+        {% endfor %}
+        {% if a.status in ('assigned', 'submitted', 'graded') %}
+        <a href="/bai/{{ a.access_token }}" target="_blank" class="btn btn-sm btn-light border" title="Trang xem đề của học sinh"><i class="bi bi-eye"></i></a>
+        {% endif %}
+        {% if a.status == 'draft' %}
+        <form method="post" action="/assignments/{{ a.id }}/approve">{{ csrf() }}<button class="btn btn-sm btn-success"><i class="bi bi-check2"></i> Duyệt</button></form>
+        {% endif %}
+        {% if a.status in ('draft', 'assigned') %}
+        <form method="post" action="/assignments/{{ a.id }}/cancel" data-confirm="Hủy bộ đề của {{ a.student.full_name }}?">{{ csrf() }}<button class="btn btn-sm btn-outline-secondary">Hủy</button></form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
